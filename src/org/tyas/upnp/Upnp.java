@@ -2,25 +2,6 @@ package org.tyas.upnp;
 
 public class Upnp
 {
-	public interface DeviceType
-	{
-		String getDomain();
-		String getType();
-		String getVersion();
-	}
-
-	public interface ServiceType
-	{
-		String getDomain();
-		String getType();
-		String getVersion();
-	}
-
-	public interface Udn
-	{
-		String getUuid();
-	}
-
 	public interface ServiceId
 	{
 		String getDomain();

@@ -38,7 +38,7 @@ public class SsdpSearchResponse implements Ssdp.SearchResponse
 
 	@Override public String getSearchTarget() { return mResp.getFirst(Ssdp.ST); }
 
-	@Override public String getUniqueServiceName() { return mResp.getFirst(Ssdp.USN); }
+	@Override public UpnpUsn getUniqueServiceName() { return UpnpUsn.getByString(mResp.getFirst(Ssdp.USN)); }
 
 	@Override public int getBootId() { return mResp.getInt(Ssdp.BOOTID, 0); }
 

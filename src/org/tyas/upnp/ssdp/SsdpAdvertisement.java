@@ -43,7 +43,7 @@ public class SsdpAdvertisement implements Ssdp.Advertisement
 
 	@Override public String getNotificationSubType() { return mReq.getFirst(Ssdp.NTS); }
 
-	@Override public String getUniqueServiceName() { return mReq.getFirst(Ssdp.USN); }
+	@Override public UpnpUsn getUniqueServiceName() { return UpnpUsn.getByString(mReq.getFirst(Ssdp.USN)); }
 
 	@Override public int getBootId() { return mReq.getInt(Ssdp.BOOTID, 0); }
 	

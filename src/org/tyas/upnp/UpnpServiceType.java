@@ -1,6 +1,6 @@
 package org.tyas.upnp;
 
-public class UpnpServiceType implements Upnp.ServiceType
+public class UpnpServiceType
 {
 	private String mDomain;
 	private String mType;

@@ -1,6 +1,7 @@
 package org.tyas.upnp.ssdp;
 
 import java.net.URL;
+import org.tyas.upnp.UpnpUsn;
 
 public class Ssdp
 {
@@ -30,7 +31,7 @@ public class Ssdp
 	{
 		long getMaxAge();
 		URL getDescriptionUrl();
-		String getUniqueServiceName();
+		UpnpUsn getUniqueServiceName();
 		int getBootId();
 		int getConfigId();
 		int getSearchPort();

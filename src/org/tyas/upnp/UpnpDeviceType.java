@@ -1,6 +1,6 @@
 package org.tyas.upnp;
 
-public class UpnpDeviceType implements Upnp.DeviceType
+public class UpnpDeviceType
 {
 	private String mDomain;
 	private String mType;
