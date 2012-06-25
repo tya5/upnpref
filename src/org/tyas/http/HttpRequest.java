@@ -17,19 +17,19 @@ public class HttpRequest extends HttpMessage implements Http.Request
 		mRequestUri = requestUri;
 	}
 	
-	public HttpRequest(Http.Message msg) {
+	public HttpRequest(Http.Message msg) throws IOException {
 		super(msg);
 
-		String start = msg.getStartLine().trim();
-		int end = start.indexOf(' ');
+		String [] start = msg.getStartLine().split(" ", 0);
+		if (start.length >= 3) {
+			mMethod = start[0];
+			mRequestUri = start[1];
+			mVersion = start[2];
+		}
 
-		mMethod = start.substring(0, end);
-
-		start = start.substring(end + 1).trim();
-		end = start.indexOf(' ');
-
-		mRequestUri = start.substring(0, end);
-		mVersion = start.substring(end + 1).trim();
+		if ((start.length != 3) || (! mVersion.startsWith("HTTP/"))) {
+			throw new HttpMessage.InvalidStartLineException("not HttpRequest");
+		}
 	}
 	
 	@Override public String getStartLine() {

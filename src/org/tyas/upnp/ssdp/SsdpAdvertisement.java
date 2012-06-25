@@ -17,6 +17,8 @@ public class SsdpAdvertisement implements Ssdp.Advertisement
 	private SsdpAdvertisement(Http.Request msg) {
 		mReqMutable = null;
 		mReq = msg;
+
+		if (! Ssdp.NOTIFY.equals(msg.getMethod())) throw new IOException("Not SsdpAdvertisement");
 	}
 
 	public SsdpAdvertisement() {

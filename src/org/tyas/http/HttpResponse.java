@@ -17,19 +17,19 @@ public class HttpResponse extends HttpMessage implements Http.Response
 		mReasonPhrase = reasonPhrase;
 	}
 
-	public HttpResponse(Http.Message msg) {
+	public HttpResponse(Http.Message msg) throws IOException {
 		super(msg);
 
-		String start = msg.getStartLine().trim();
-		int end = start.indexOf(' ');
+		String [] start = msg.getStartLine().split(" ", 0);
+		if (start.length >= 3) {
+			mVersion = start[0];
+			mStatusCode = start[1];
+			mReasonPhrase = start[2];
+		}
 
-		mVersion = start.substring(0, end);
-
-		start = start.substring(end + 1).trim();
-		end = start.indexOf(' ');
-
-		mStatusCode = start.substring(0, end);
-		mReasonPhrase = start.substring(end + 1).trim();
+		if ((start.length != 3) || (! mVersion.startsWith("HTTP/"))) {
+			throw new HttpMessage.InvalidStartLineException("not HttpResponse");
+		}
 	}
 
 	@Override public String getStartLine() {

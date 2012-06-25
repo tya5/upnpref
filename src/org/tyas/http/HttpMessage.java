@@ -14,6 +14,13 @@ import java.net.URL;
 
 public abstract class HttpMessage implements Http.Message
 {
+	public static class InvalidStartLineException extends RuntimeException
+	{
+		public InvalidStartLineException(String text) {
+			super(text);
+		}
+	}
+
 	private Map<String,List<String>> mMap = new HashMap<String,List<String>>();
 
 	public HttpMessage() {}
