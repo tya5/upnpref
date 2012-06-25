@@ -10,6 +10,8 @@ import java.io.OutputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Set;
+import java.net.URI;
+import java.net.URL;
 
 public class Http
 {
@@ -30,17 +32,22 @@ public class Http
 	public static final String KEEP_ALIVE = "KEEP-ALIVE";
 	public static final String CLOSE = "CLOSE";
 	public static final String CHUNKED = "chunked";
+	public static final String MAX_AGE = "max-age";
 
 	public interface Message
 	{
 		List<String> get(String name);
 		String getFirst(String name);
+		int getInt(String name, int defaultValue);
+		long getLong(String name, long defaultValue);
 		Set<String> keySet();
 		boolean isKeepAlive();
 		boolean isChunkedEncoding();
 		long getContentLength();
 		String getHost();
 		String getStartLine();
+		long getMaxAge();
+		URI getLocation();
 	}
 
 	public interface InputMessage
@@ -95,8 +102,8 @@ public class Http
 			int mid = line.indexOf(':');
 			if (mid < 0) break;
 			String name = line.substring(0, mid).trim().toUpperCase();
-			String [] vals = line.substring(mid + 1).split(" ", 0);
-			for (String val : vals) msg.put(name, val);
+			String [] vals = line.substring(mid + 1).split(",", 0);
+			for (String val : vals) msg.put(name, val.trim());
 			line = readLine(in);
 		}
 
@@ -208,8 +215,7 @@ public class Http
 		for (String key: msg.keySet()) {
 			if (Http.TRANSFER_ENCODING.equals(key)) continue;
 			if (Http.CONTENT_LENGTH.equals(key)) continue;
-			String values = "";
-			for (String val: msg.get(key)) values += " " + val;
+			String values = join(msg.get(key), ",");
 			out.write((key + ":" + values + "\r\n").getBytes("UTF8"));
 		}
 
@@ -237,5 +243,16 @@ public class Http
 		}
 
 		return lineBuf.toString();
+	}
+
+	private static String join(List<String> texts, String delim) {
+		if ((texts == null) || (texts.size() <= 0)) return "";
+
+		String out = texts.get(0);
+		for (int ii = 1; ii < texts.size(); ii++) {
+			out += delim + texts.get(ii);
+		}
+
+		return out;
 	}
 }

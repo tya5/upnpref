@@ -9,6 +9,8 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URL;
 
 public abstract class HttpMessage implements Http.Message
 {
@@ -29,6 +31,22 @@ public abstract class HttpMessage implements Http.Message
 	@Override public String getFirst(String name) {
 		List<String> list = get(name);
 		return list == null || list.size() == 0 ? null: list.get(0);
+	}
+
+	@Override public int getInt(String name, int defaultValue) {
+		try {
+			return Integer.decode(getFirst(name));
+		} catch (Exception e) {
+			return defaultValue;
+		}
+	}
+
+	@Override public long getLong(String name, long defaultValue) {
+		try {
+			return Long.decode(getFirst(name));
+		} catch (Exception e) {
+			return defaultValue;
+		}
 	}
 
 	@Override public Set<String> keySet() {
@@ -63,6 +81,51 @@ public abstract class HttpMessage implements Http.Message
 		return getFirst(Http.HOST);
 	}
 
+	@Override public long getMaxAge() {
+		List<String> list = get(Http.CACHE_CONTROL);
+
+		if (list == null) return -1;
+
+		for (String item: list) {
+			int idx = item.indexOf(Http.MAX_AGE);
+			if (idx >= 0) {
+				idx = item.indexOf('=', idx + Http.MAX_AGE.length());
+				if (idx >= 0) {
+					try {
+						return Long.decode(item.substring(idx + 1).trim());
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}
+
+		return -1;
+	}
+
+	@Override public URI getLocation() {
+		try {
+			return new URI(getFirst(Http.LOCATION));
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	public void setMaxAge(long max) {
+		List<String> list = get(Http.CACHE_CONTROL);
+
+		if (list != null) {
+			for (String item: list) {
+				int idx = item.indexOf(Http.MAX_AGE);
+				if (idx >= 0) {
+					list.remove(item);
+				}
+			}
+		}
+		put(Http.CACHE_CONTROL, Http.MAX_AGE + "=" + max);
+	}
+
 	public void put(String name, String value) {
 		List<String> list = get(name);
 
@@ -87,6 +150,10 @@ public abstract class HttpMessage implements Http.Message
 		list.add(value);
 	}
 
+	public void setInt(String name, int value) {
+		putFirst(name, "" + value);
+	}
+
 	public void remove(String name) {
 		mMap.remove(name);
 	}
@@ -107,8 +174,8 @@ public abstract class HttpMessage implements Http.Message
 		putFirst(Http.LOCATION, uri);
 	}
 
-	public void setCacheControl(String name, String value) {
-		putFirst(Http.CACHE_CONTROL, name + (value == null ? "": ("=" + value)));
+	public void setLocation(URI uri) {
+		setLocation(uri.toString());
 	}
 
 	public void putServerToken(String product) {
