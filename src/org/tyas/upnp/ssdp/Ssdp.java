@@ -17,7 +17,7 @@ public class Ssdp
 	public static final String CONFIGID = "CONFIGID.UPNP.ORG";
 	public static final String SEARCHPORT = "SEARCHPORT.UPNP.ORG";
 	
-	public static final int DEFAULT_SSDP_PORT = 1900;
+	public static final int DEFAULT_PORT = 1900;
 
 	public static final String NTS_ALIVE = "ssdp:alive";
 	public static final String NTS_BYEBYE = "ssdp:byebye";
