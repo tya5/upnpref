@@ -63,9 +63,9 @@ public class HttpServer extends ServerSocket
 					do {
 						req = HttpRequest.parse(in);
 						if (! handler.handleHttpRequest(req, this)) {
-							responseErrorStatus(req);
+							;
 						}
-					} while (req.getHeaders().isKeepAlive());
+					} while (req.getRequest().isKeepAlive());
 					
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -87,8 +87,5 @@ public class HttpServer extends ServerSocket
 
 	public boolean handleHttpRequest(Http.InputRequest req, Context ctx) {
 		return false;
-	}
-
-	protected void responseErrorStatus(req) {
 	}
 }

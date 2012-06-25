@@ -11,12 +11,10 @@ public class MyHttpServer
 			HttpServer server = new HttpServer(8081) {
 					@Override public boolean handleHttpRequest(Http.InputRequest req, HttpServer.Context ctx) {
 						try {
-							System.out.println("RequestUri: " + req.getRequestUri());
+							System.out.println("RequestUri: " + req.getRequest().getRequestUri());
 
-							HttpHeaders headers = new HttpHeaders();
-
-							new HttpResponse(Http.VERSION_1_1, "200", "OK", headers)
-								.send(ctx.getClient().getOutputStream(), new File(req.getRequestUri()));
+							new HttpResponse(Http.VERSION_1_1, "200", "OK")
+								.send(ctx.getClient().getOutputStream(), new File(req.getRequest().getRequestUri()));
 
 							return true;
 						} catch (Exception e) {

@@ -29,8 +29,9 @@ public class Http
 	public static final String CONNECTION = "CONNECTION";
 	public static final String KEEP_ALIVE = "KEEP-ALIVE";
 	public static final String CLOSE = "CLOSE";
+	public static final String CHUNKED = "chunked";
 
-	public interface Headers
+	public interface Message
 	{
 		List<String> get(String name);
 		String getFirst(String name);
@@ -38,20 +39,14 @@ public class Http
 		boolean isKeepAlive();
 		boolean isChunkedEncoding();
 		long getContentLength();
-		String getHost()
-	}
-
-	public interface Message
-	{
+		String getHost();
 		String getStartLine();
-		Headers getHeaders();
 	}
 
-	public interface InputMessage extends Message
+	public interface InputMessage
 	{
-		/**
-		 * Get InputStream for entity body
-		 */
+		Message getMessage();
+		/** Get InputStream for entity body */
 		InputStream getInputStream();
 	}
 
@@ -69,9 +64,17 @@ public class Http
 		String getReasonPhrase();
 	}
 
-	public interface InputRequest extends InputMessage, Request {}
+	public interface InputRequest
+	{
+		Request getRequest();
+		InputStream getInputStream();
+	}
 
-	public interface InputResponse extends InputMessage, Response {}
+	public interface InputResponse
+	{
+		Response getResponse();
+		InputStream getInputStream();
+	}
 
 	/**
 	 * Make entity body stream for input.
@@ -80,8 +83,11 @@ public class Http
 	 * @return general message
 	 */
 	public static InputMessage readMessage(InputStream in) throws IOException {
-		final HttpHeaders headers = new HttpHeaders();
 		final String startLine = readLine(in).trim();
+		final HttpMessage msg = new HttpMessage() {
+				@Override public String getStartLine() { return startLine; }
+			};
+		
 		String line;
 
 		line = readLine(in);
@@ -90,11 +96,11 @@ public class Http
 			if (mid < 0) break;
 			String name = line.substring(0, mid).trim().toUpperCase();
 			String [] vals = line.substring(mid + 1).split(" ", 0);
-			for (String val : vals) headers.put(name, val);
+			for (String val : vals) msg.put(name, val);
 			line = readLine(in);
 		}
 
-		if (headers.isChunkedEncoding()) {
+		if (msg.isChunkedEncoding()) {
 			in = new FilterInputStream(in) {
 					int remain = 0;
 					@Override public int read() throws IOException {
@@ -113,7 +119,9 @@ public class Http
 					}
 				};
 		} else {
-			final int contentSize = headers.getContentLength();
+			long tmp = msg.getContentLength();
+			if (tmp >= Integer.MAX_VALUE) throw new IOException();
+			final int contentSize = (int)tmp;
 
 			in = (contentSize <= 0) ? null: new FilterInputStream(in) {
 					int ofs = 0;
@@ -137,8 +145,7 @@ public class Http
 		final InputStream body = in;
 
 		return new InputMessage() {
-			@Override public String getStartLine() { return startLine; }
-			@Override public Headers getHeaders() { return headers; }
+			@Override public Message getMessage() { return msg; }
 			@Override public InputStream getInputStream() { return body; }
 		};
 	}
@@ -151,9 +158,7 @@ public class Http
 	 * @return OutputStream for entity body
 	 */
 	public static OutputStream writeMessage(OutputStream out, Message msg, final int maxChunkSize) throws IOException {
-		HttpHeaders headers = new HttpHeaders(msg.getHeaders());
-		headers.putFirst(Http.TRANSFER_ENCODING, "chunked");
-		writeMessageHeader(out, msg.getStartLine(), headers);
+		writeMessageHeaders(out, msg.getStartLine(), msg, CHUNKED, null);
 		
 		return new FilterOutputStream(out) {
 			int ofs = 0;
@@ -172,13 +177,11 @@ public class Http
 	}
 
 	public static void writeMessage(OutputStream out, Message msg, byte [] entity) throws IOException {
-		HttpHeaders headers = new HttpHeaders(msg.getHeaders());
-		headers.remove(Http.TRANSFER_ENCODING);
-		headers.remove(Http.CONTENT_LENGTH);
+		String contLen = null;
 		if ((entity != null) && (entity.length > 0)) {
-			headers.put(Http.CONTENT_LENGTH, String.format("%x", entity.length));
+			contLen = String.format("%x", entity.length);
 		}
-		writeMessageHeader(out, msg.getStartLine(), headers);
+		writeMessageHeaders(out, msg.getStartLine(), msg, null, contLen);
 		if ((entity != null) && (entity.length > 0)) {
 			out.write(entity);
 		}
@@ -199,14 +202,24 @@ public class Http
 		in.close();
 	}
 
-	private static void writeMessageHeader(OutputStream out, String startLine, Headers headers) throws IOException {
+	private static void writeMessageHeaders(OutputStream out, String startLine, Message msg, String transEnc, String contLen) throws IOException {
 		out.write((startLine + "\r\n").getBytes("UTF8"));
 
-		for (String key: headers.keySet()) {
+		for (String key: msg.keySet()) {
+			if (Http.TRANSFER_ENCODING.equals(key)) continue;
+			if (Http.CONTENT_LENGTH.equals(key)) continue;
 			String values = "";
-			for (String val: headers.get(key)) values += " " + val;
+			for (String val: msg.get(key)) values += " " + val;
 			out.write((key + ":" + values + "\r\n").getBytes("UTF8"));
 		}
+
+		if (transEnc != null) {
+			out.write((Http.TRANSFER_ENCODING + ":" + transEnc + Http.CRLF).getBytes("UTF8"));
+		}
+		if (contLen != null) {
+			out.write((Http.CONTENT_LENGTH + ":" + contLen + Http.CRLF).getBytes("UTF8"));
+		}
+
 		out.write("\r\n".getBytes("UTF8"));
 	}
 
