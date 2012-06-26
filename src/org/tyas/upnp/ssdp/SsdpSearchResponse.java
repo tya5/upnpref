@@ -9,7 +9,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URL;
-import java.net.DatagramSocket;
 import java.net.DatagramPacket;
 
 public class SsdpSearchResponse implements Ssdp.SearchResponse
@@ -88,12 +87,11 @@ public class SsdpSearchResponse implements Ssdp.SearchResponse
 		mRespMutable.send(out, (byte [])null);
 	}
 
-	public void send(DatagramSocket sock) throws IOException {
+	public DatagramPacket toDatagramPacket() throws IOException {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		send(out);
 		byte [] data = out.toByteArray();
-		DatagramPacket pkt = new DatagramPacket(data, data.length);
-		sock.send(pkt);
+		return new DatagramPacket(data, data.length);
 	}
 
 	public static boolean isValid(Http.Response resp) {

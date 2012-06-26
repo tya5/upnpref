@@ -7,7 +7,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.IOException;
-import java.net.DatagramSocket;
 import java.net.DatagramPacket;
 
 public class SsdpSearchRequest implements Ssdp.SearchRequest
@@ -32,6 +31,8 @@ public class SsdpSearchRequest implements Ssdp.SearchRequest
 
 	@Override public String getSearchTarget() { return mReq.getFirst(Ssdp.ST); }
 
+	@Override public String getMan() { return mReq.getFirst(Ssdp.MAN); }
+
 	public SsdpSearchRequest setHost(String host) {
 		mReqMutable.setHost(host);
 		return this;
@@ -47,16 +48,20 @@ public class SsdpSearchRequest implements Ssdp.SearchRequest
 		return this;
 	}
 
+	public SsdpSearchRequest setMan(String man) {
+		mReqMutable.putFirst(Ssdp.MAN, man);
+		return this;
+	}
+
 	public void send(OutputStream out) throws IOException {
 		mReqMutable.send(out, (byte [])null);
 	}
 
-	public void send(DatagramSocket sock) throws IOException {
+	public DatagramPacket toDatagramPacket() throws IOException {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		send(out);
 		byte [] data = out.toByteArray();
-		DatagramPacket pkt = new DatagramPacket(data, data.length);
-		sock.send(pkt);
+		return new DatagramPacket(data, data.length);
 	}
 
 	public static boolean isValid(Http.Request req) {

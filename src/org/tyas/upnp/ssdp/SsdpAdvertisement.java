@@ -9,7 +9,6 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URL;
-import java.net.DatagramSocket;
 import java.net.DatagramPacket;
 
 public class SsdpAdvertisement implements Ssdp.Advertisement
@@ -18,7 +17,7 @@ public class SsdpAdvertisement implements Ssdp.Advertisement
 	private HttpRequest  mReqMutable;
 
 	public SsdpAdvertisement(Http.Request req) {
-		if (isValid(req)) throw new RuntimeException("Not SsdpAdvertisement");
+		if (! isValid(req)) throw new RuntimeException("Not SsdpAdvertisement");
 
 		mReqMutable = null;
 		mReq = req;
@@ -87,12 +86,11 @@ public class SsdpAdvertisement implements Ssdp.Advertisement
 		mReqMutable.send(out, (byte [])null);
 	}
 
-	public void notify(DatagramSocket sock) throws IOException {
+	public DatagramPacket toDatagramPacket() throws IOException {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		notify(out);
 		byte [] data = out.toByteArray();
-		DatagramPacket pkt = new DatagramPacket(data, data.length);
-		sock.send(pkt);
+		return new DatagramPacket(data, data.length);
 	}
 
 	public static boolean isValid(Http.Request req) {
