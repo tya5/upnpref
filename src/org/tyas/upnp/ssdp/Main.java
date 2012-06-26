@@ -27,23 +27,26 @@ public class Main
 
 			for (int ii = 0; ; ii++) {
 				new SsdpServer() {
-					@Override protected void onAdvertisement(Ssdp.Advertisement adv) {
+					@Override protected void onAdvertisement(Ssdp.Advertisement adv, SsdpServer.Context ctx) {
 						System.out.println("onAdvertisement");
+						System.out.println(" from:" + ctx.getPacket().getAddress());
 						System.out.println(" HOST:" + adv.getHost());
 						System.out.println(" LOCATION:" + adv.getDescriptionUrl());
 						System.out.println(" NT:" + adv.getNotificationType());
 						System.out.println(" NTS:" + adv.getNotificationSubType());
 						System.out.println(" USN:" + adv.getUniqueServiceName());
 					}
-					@Override protected void onSearchRequest(Ssdp.SearchRequest sreq) {
+					@Override protected void onSearchRequest(Ssdp.SearchRequest sreq, SsdpServer.Context ctx) {
 						System.out.println("onSearchRequest");
+						System.out.println(" from:" + ctx.getPacket().getAddress());
 						System.out.println(" HOST:" + sreq.getHost());
 						System.out.println(" MAN:" + sreq.getMan());
 						System.out.println(" MX:" + sreq.getMaxWaitTime());
 						System.out.println(" ST:" + sreq.getSearchTarget());
 					}
-					@Override protected void onSearchResponse(Ssdp.SearchResponse sresp) {
+					@Override protected void onSearchResponse(Ssdp.SearchResponse sresp, SsdpServer.Context ctx) {
 						System.out.println("onSearchResponse");
+						System.out.println(" from:" + ctx.getPacket().getAddress());
 						System.out.println(" LOCATION:" + sresp.getDescriptionUrl());
 						System.out.println(" ST:" + sresp.getSearchTarget());
 						System.out.println(" USN:" + sresp.getUniqueServiceName());

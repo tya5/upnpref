@@ -16,22 +16,28 @@ public class SsdpServer
 
 	public interface Handler
 	{
-		void onAdvertisement(Ssdp.Advertisement adv);
-		void onSearchRequest(Ssdp.SearchRequest req);
-		void onSearchResponse(Ssdp.SearchResponse resp);
+		void onAdvertisement(Ssdp.Advertisement adv, Context ctx);
+		void onSearchRequest(Ssdp.SearchRequest req, Context ctx);
+		void onSearchResponse(Ssdp.SearchResponse resp, Context ctx);
+	}
+
+	public interface Context
+	{
+		DatagramSocket getSocket();
+		DatagramPacket getPacket();
 	}
 
 	private int mBuffSize;
 
 	private final Handler mHandler = new Handler() {
-			@Override public void onAdvertisement(Ssdp.Advertisement adv) {
-				SsdpServer.this.onAdvertisement(adv);
+			@Override public void onAdvertisement(Ssdp.Advertisement adv, Context ctx) {
+				SsdpServer.this.onAdvertisement(adv, ctx);
 			}
-			@Override public void onSearchRequest(Ssdp.SearchRequest req) {
-				SsdpServer.this.onSearchRequest(req);
+			@Override public void onSearchRequest(Ssdp.SearchRequest req, Context ctx) {
+				SsdpServer.this.onSearchRequest(req, ctx);
 			}
-			@Override public void onSearchResponse(Ssdp.SearchResponse resp) {
-				SsdpServer.this.onSearchResponse(resp);
+			@Override public void onSearchResponse(Ssdp.SearchResponse resp, Context ctx) {
+				SsdpServer.this.onSearchResponse(resp, ctx);
 			}
 		};
 
@@ -47,12 +53,16 @@ public class SsdpServer
 		return accept(socket, mHandler);
 	}
 
-	public Runnable accept(DatagramSocket socket, final Handler handler) throws IOException {
+	public Runnable accept(final DatagramSocket socket, final Handler handler) throws IOException {
 		if (socket == null) return null;
 
 		byte [] buff = new byte[mBuffSize];
 		final DatagramPacket pkt = new DatagramPacket(buff, buff.length);
 		socket.receive(pkt);
+		final Context ctx = new Context() {
+				@Override public DatagramSocket getSocket() { return socket; }
+				@Override public DatagramPacket getPacket() { return pkt; }
+			};
 
 		return new Runnable() {
 			@Override public void run() {
@@ -63,17 +73,17 @@ public class SsdpServer
 					if (HttpResponse.isValid(msg)) {
 						HttpResponse resp = new HttpResponse(msg);
 						SsdpSearchResponse ssresp = new SsdpSearchResponse(resp);
-						if (handler != null) handler.onSearchResponse(ssresp);
+						if (handler != null) handler.onSearchResponse(ssresp, ctx);
 					}
 					if (HttpRequest.isValid(msg)) {
 						HttpRequest req = new HttpRequest(msg);
 						if (SsdpAdvertisement.isValid(req)) {
 							SsdpAdvertisement ssadv = new SsdpAdvertisement(req);
-							if (handler != null) handler.onAdvertisement(ssadv);
+							if (handler != null) handler.onAdvertisement(ssadv, ctx);
 						}
 						if (SsdpSearchRequest.isValid(req)) {
 							SsdpSearchRequest ssreq = new SsdpSearchRequest(req);
-							if (handler != null) handler.onSearchRequest(ssreq);
+							if (handler != null) handler.onSearchRequest(ssreq, ctx);
 						}
 					}
 				} catch (Exception e) {
@@ -83,7 +93,7 @@ public class SsdpServer
 		};
 	}
 
-	protected void onAdvertisement(Ssdp.Advertisement adv) {}
-	protected void onSearchRequest(Ssdp.SearchRequest req) {}
-	protected void onSearchResponse(Ssdp.SearchResponse resp) {}
+	protected void onAdvertisement(Ssdp.Advertisement adv, Context ctx) {}
+	protected void onSearchRequest(Ssdp.SearchRequest req, Context ctx) {}
+	protected void onSearchResponse(Ssdp.SearchResponse resp, Context ctx) {}
 }

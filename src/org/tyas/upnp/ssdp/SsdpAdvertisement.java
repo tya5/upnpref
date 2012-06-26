@@ -36,6 +36,7 @@ public class SsdpAdvertisement implements Ssdp.Advertisement
 			return mReq.getLocation().toURL();
 		} catch (Exception e) {
 			e.printStackTrace();
+			System.out.println("DescriptionUrlString: '" + mReq.getLocation() + "'");
 			return null;
 		}
 	}

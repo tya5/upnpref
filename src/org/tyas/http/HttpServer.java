@@ -7,7 +7,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.IOException;
 
-public class HttpServer extends ServerSocket
+public class HttpServer
 {
 	public interface RequestHandler
 	{
@@ -16,7 +16,7 @@ public class HttpServer extends ServerSocket
 
 	public interface Context extends Runnable
 	{
-		HttpServer getServer();
+		ServerSocket getServer();
 		Socket getClient();
 	}
 
@@ -27,28 +27,12 @@ public class HttpServer extends ServerSocket
 			}
 		};
 
-	public HttpServer() throws IOException {
-		super();
-	}
-
-	public HttpServer(int port) throws IOException {
-		super(port);
-	}
-
-	public HttpServer(int port, int backlog) throws IOException {
-		super(port, backlog);
-	}
-
-	public HttpServer(int port, int backlog, InetAddress localAddress) throws IOException {
-		super(port, backlog, localAddress);
-	}
-
-	public Context acceptHttpRequest(final RequestHandler handler) throws IOException {
-		final Socket sock = accept();
+	public Context accept(final ServerSocket server, final RequestHandler handler) throws IOException {
+		final Socket sock = server.accept();
 		
 		return new Context() {
-			@Override public HttpServer getServer() {
-				return HttpServer.this;
+			@Override public ServerSocket getServer() {
+				return server;
 			}
 			@Override public Socket getClient() {
 				return sock;
@@ -81,11 +65,11 @@ public class HttpServer extends ServerSocket
 		};
 	}
 
-	public Context acceptHttpRequest() throws IOException {
-		return acceptHttpRequest(mDefaultHandler);
+	public Context accept(ServerSocket server) throws IOException {
+		return accept(server, mDefaultHandler);
 	}
 
-	public boolean handleHttpRequest(Http.InputRequest req, Context ctx) {
+	protected boolean handleHttpRequest(Http.InputRequest req, Context ctx) {
 		return false;
 	}
 }
