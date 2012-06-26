@@ -20,16 +20,12 @@ public class HttpResponse extends HttpMessage implements Http.Response
 	public HttpResponse(Http.Message msg) throws IOException {
 		super(msg);
 
-		String [] start = msg.getStartLine().split(" ", 0);
-		if (start.length >= 3) {
-			mVersion = start[0];
-			mStatusCode = start[1];
-			mReasonPhrase = start[2];
-		}
+		if (! isValid(msg)) throw new RuntimeException("not HttpResponse");
 
-		if ((start.length != 3) || (! mVersion.startsWith("HTTP/"))) {
-			throw new HttpMessage.InvalidStartLineException("not HttpResponse");
-		}
+		String [] start = msg.getStartLine().split(" ", 0);
+		mVersion = start[0];
+		mStatusCode = start[1];
+		mReasonPhrase = start[2];
 	}
 
 	@Override public String getStartLine() {
@@ -46,6 +42,16 @@ public class HttpResponse extends HttpMessage implements Http.Response
 
 	@Override public String getReasonPhrase() {
 		return mReasonPhrase;
+	}
+
+	public static boolean isValid(Http.Message msg) {
+		String [] start = msg.getStartLine().split(" ", 0);
+
+		if (start.length != 3) return false;
+
+		if (! start[0].startsWith("HTTP/")) return false;
+
+		return true;
 	}
 
 	public static Http.InputResponse parse(InputStream in) throws IOException {

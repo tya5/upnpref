@@ -3,22 +3,25 @@ package org.tyas.upnp.ssdp;
 import org.tyas.http.Http;
 import org.tyas.http.HttpRequest;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URI;
 import java.net.URL;
+import java.net.DatagramSocket;
+import java.net.DatagramPacket;
 
 public class SsdpAdvertisement implements Ssdp.Advertisement
 {
 	private Http.Request mReq;
 	private HttpRequest  mReqMutable;
 
-	private SsdpAdvertisement(Http.Request msg) {
-		mReqMutable = null;
-		mReq = msg;
+	public SsdpAdvertisement(Http.Request req) {
+		if (isValid(req)) throw new RuntimeException("Not SsdpAdvertisement");
 
-		if (! Ssdp.NOTIFY.equals(msg.getMethod())) throw new IOException("Not SsdpAdvertisement");
+		mReqMutable = null;
+		mReq = req;
 	}
 
 	public SsdpAdvertisement() {
@@ -82,6 +85,20 @@ public class SsdpAdvertisement implements Ssdp.Advertisement
 
 	public void notify(OutputStream out) throws IOException {
 		mReqMutable.send(out, (byte [])null);
+	}
+
+	public void notify(DatagramSocket sock) throws IOException {
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		notify(out);
+		byte [] data = out.toByteArray();
+		DatagramPacket pkt = new DatagramPacket(data, data.length);
+		sock.send(pkt);
+	}
+
+	public static boolean isValid(Http.Request req) {
+		if (! Ssdp.NOTIFY.equals(req.getMethod())) return false;
+
+		return true;
 	}
 
 	public static Ssdp.Advertisement parse(InputStream in) throws IOException {

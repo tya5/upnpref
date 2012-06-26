@@ -171,12 +171,12 @@ public class Http
 			int ofs = 0;
 			@Override public void write(int b) throws IOException {
 				if (ofs == 0) {
-					out.write(String.format("%x\r\n", maxChunkSize).getBytes("UTF8"));
+					out.write(String.format("%x\r\n", maxChunkSize).getBytes());
 				}
 				out.write(b);
 				ofs++;
 				if (ofs >= maxChunkSize) {
-					out.write("\r\n".getBytes("UTF8"));
+					out.write("\r\n".getBytes());
 					ofs = 0;
 				}
 			}
@@ -210,23 +210,23 @@ public class Http
 	}
 
 	private static void writeMessageHeaders(OutputStream out, String startLine, Message msg, String transEnc, String contLen) throws IOException {
-		out.write((startLine + "\r\n").getBytes("UTF8"));
+		out.write((startLine + "\r\n").getBytes());
 
 		for (String key: msg.keySet()) {
 			if (Http.TRANSFER_ENCODING.equals(key)) continue;
 			if (Http.CONTENT_LENGTH.equals(key)) continue;
 			String values = join(msg.get(key), ",");
-			out.write((key + ":" + values + "\r\n").getBytes("UTF8"));
+			out.write((key + ":" + values + "\r\n").getBytes());
 		}
 
 		if (transEnc != null) {
-			out.write((Http.TRANSFER_ENCODING + ":" + transEnc + Http.CRLF).getBytes("UTF8"));
+			out.write((Http.TRANSFER_ENCODING + ":" + transEnc + Http.CRLF).getBytes());
 		}
 		if (contLen != null) {
-			out.write((Http.CONTENT_LENGTH + ":" + contLen + Http.CRLF).getBytes("UTF8"));
+			out.write((Http.CONTENT_LENGTH + ":" + contLen + Http.CRLF).getBytes());
 		}
 
-		out.write("\r\n".getBytes("UTF8"));
+		out.write("\r\n".getBytes());
 	}
 
 	private static String readLine(InputStream in) throws IOException {

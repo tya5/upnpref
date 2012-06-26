@@ -3,18 +3,23 @@ package org.tyas.upnp.ssdp;
 import org.tyas.http.Http;
 import org.tyas.http.HttpRequest;
 
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.IOException;
+import java.net.DatagramSocket;
+import java.net.DatagramPacket;
 
 public class SsdpSearchRequest implements Ssdp.SearchRequest
 {
 	private Http.Request mReq;
 	private HttpRequest  mReqMutable;
 
-	private SsdpSearchRequest(Http.Request msg) {
+	public SsdpSearchRequest(Http.Request req) {
+		if (! isValid(req)) throw new RuntimeException("Not SsdpSearchRequest");
+
 		mReqMutable = null;
-		mReq = msg;
+		mReq = req;
 	}
 
 	public SsdpSearchRequest() {
@@ -44,6 +49,20 @@ public class SsdpSearchRequest implements Ssdp.SearchRequest
 
 	public void send(OutputStream out) throws IOException {
 		mReqMutable.send(out, (byte [])null);
+	}
+
+	public void send(DatagramSocket sock) throws IOException {
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		send(out);
+		byte [] data = out.toByteArray();
+		DatagramPacket pkt = new DatagramPacket(data, data.length);
+		sock.send(pkt);
+	}
+
+	public static boolean isValid(Http.Request req) {
+		if (! Ssdp.M_SEARCH.equals(req.getMethod())) return false;
+
+		return true;
 	}
 
 	public static Ssdp.SearchRequest parse(InputStream in) throws IOException {

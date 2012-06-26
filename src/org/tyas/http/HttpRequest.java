@@ -17,19 +17,15 @@ public class HttpRequest extends HttpMessage implements Http.Request
 		mRequestUri = requestUri;
 	}
 	
-	public HttpRequest(Http.Message msg) throws IOException {
+	public HttpRequest(Http.Message msg) {
 		super(msg);
 
-		String [] start = msg.getStartLine().split(" ", 0);
-		if (start.length >= 3) {
-			mMethod = start[0];
-			mRequestUri = start[1];
-			mVersion = start[2];
-		}
+		if (! isValid(msg)) throw new RuntimeException("not HttpRequest");
 
-		if ((start.length != 3) || (! mVersion.startsWith("HTTP/"))) {
-			throw new HttpMessage.InvalidStartLineException("not HttpRequest");
-		}
+		String [] start = msg.getStartLine().split(" ", 0);
+		mMethod = start[0];
+		mRequestUri = start[1];
+		mVersion = start[2];
 	}
 	
 	@Override public String getStartLine() {
@@ -52,6 +48,16 @@ public class HttpRequest extends HttpMessage implements Http.Request
 		if (getHost() == null) {
 			setHost("");
 		}
+	}
+
+	public static boolean isValid(Http.Message msg) {
+		String [] start = msg.getStartLine().split(" ", 0);
+
+		if (start.length != 3) return false;
+
+		if (! start[2].startsWith("HTTP/")) return false;
+
+		return true;
 	}
 
 	public static Http.InputRequest parse(InputStream in) throws IOException {
