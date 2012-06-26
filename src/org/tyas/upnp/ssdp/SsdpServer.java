@@ -29,7 +29,7 @@ public class SsdpServer
 
 	private int mBuffSize;
 
-	private final Handler mHandler = new Handler() {
+	private Handler mHandler = new Handler() {
 			@Override public void onAdvertisement(Ssdp.Advertisement adv, Context ctx) {
 				SsdpServer.this.onAdvertisement(adv, ctx);
 			}
@@ -40,6 +40,10 @@ public class SsdpServer
 				SsdpServer.this.onSearchResponse(resp, ctx);
 			}
 		};
+
+	public SsdpServer(int buffSize, Handler handler) {
+		this(buffSize);
+		mHandler = handler;
 
 	public SsdpServer(int buffSize) {
 		mBuffSize = buffSize;

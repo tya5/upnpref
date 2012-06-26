@@ -20,12 +20,19 @@ public class HttpServer
 		Socket getClient();
 	}
 
-	private final RequestHandler mDefaultHandler = new RequestHandler() {
+	private RequestHandler mHandler = new RequestHandler() {
 			@Override public boolean handleHttpRequest(Http.InputRequest req, Context ctx) {
 				HttpServer.this.handleHttpRequest(req, ctx);
 				return false;
 			}
 		};
+
+	public HttpServer() {
+	}
+
+	public HttpServer(RequestHandler handler) {
+		mHandler = handler;
+	}
 
 	public Context accept(final ServerSocket server, final RequestHandler handler) throws IOException {
 		final Socket sock = server.accept();
@@ -66,7 +73,7 @@ public class HttpServer
 	}
 
 	public Context accept(ServerSocket server) throws IOException {
-		return accept(server, mDefaultHandler);
+		return accept(server, mHandler);
 	}
 
 	protected boolean handleHttpRequest(Http.InputRequest req, Context ctx) {
