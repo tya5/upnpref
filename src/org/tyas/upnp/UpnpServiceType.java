@@ -1,4 +1,4 @@
-package org.tyas.upnp.device;
+package org.tyas.upnp;
 
 public class UpnpServiceType implements Upnp.ServiceType
 {
@@ -44,5 +44,13 @@ public class UpnpServiceType implements Upnp.ServiceType
 		if (! "service".equals(ar[2])) return null;
 
 		return new UpnpServiceType(ar[1], ar[3], ar[4]);
+	}
+
+	public static ServiceType getByUsn(String usn) {
+		String [] ar = usn.split("::", 0);
+
+		if (ar.length > 1) return getByUrn(ar[1]);
+
+		return null;
 	}
 }

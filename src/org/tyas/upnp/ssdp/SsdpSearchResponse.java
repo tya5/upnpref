@@ -16,9 +16,7 @@ public class SsdpSearchResponse implements Ssdp.SearchResponse
 	private Http.Response mResp;
 	private HttpResponse  mRespMutable;
 
-	public SsdpSearchResponse(Http.Response resp) {
-		if (! isValid(resp)) throw new RuntimeException("Not SsdpSearchResponse");
-
+	private SsdpSearchResponse(Http.Response resp) {
 		mRespMutable = null;
 		mResp = resp;
 	}
@@ -92,6 +90,12 @@ public class SsdpSearchResponse implements Ssdp.SearchResponse
 		send(out);
 		byte [] data = out.toByteArray();
 		return new DatagramPacket(data, data.length);
+	}
+
+	public static SsdpSearchResponse getByHttpResponse(Http.Response resp) {
+		if (! isValid(resp)) return null;
+
+		return new SsdpSearchResponse(resp);
 	}
 
 	public static boolean isValid(Http.Response resp) {

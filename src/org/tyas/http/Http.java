@@ -45,6 +45,7 @@ public class Http
 		boolean isChunkedEncoding();
 		long getContentLength();
 		String getHost();
+		int getPort();
 		String getStartLine();
 		long getMaxAge();
 		URI getLocation();

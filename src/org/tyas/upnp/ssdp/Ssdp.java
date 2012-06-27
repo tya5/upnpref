@@ -26,18 +26,22 @@ public class Ssdp
 	public static final String NTS_UPDATE = "ssdp:update";
 	public static final String MAN_DISCOVER = "\"ssdp:discover\"";
 
-	public interface Advertisement
+	public interface RemoteDevicePointer
 	{
-		String getHost();
 		long getMaxAge();
 		URL getDescriptionUrl();
-		String getNotificationType();
-		String getNotificationSubType();
-		//String getServerName();
 		String getUniqueServiceName();
 		int getBootId();
 		int getConfigId();
 		int getSearchPort();
+	}
+
+	public interface Advertisement extends RemoteDevicePointer
+	{
+		String getHost();
+		String getNotificationType();
+		String getNotificationSubType();
+		//String getServerName();
 	}
 
 	public interface SearchRequest
@@ -48,16 +52,10 @@ public class Ssdp
 		String getMan();
 	}
 
-	public interface SearchResponse
+	public interface SearchResponse extends RemoteDevicePointer
 	{
-		long getMaxAge();
 		//Date getDate();
-		URL getDescriptionUrl();
 		//String getServerName();
 		String getSearchTarget();
-		String getUniqueServiceName();
-		int getBootId();
-		int getConfigId();
-		int getSearchPort();
 	}
 }

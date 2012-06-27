@@ -1,4 +1,4 @@
-package org.tyas.upnp.device;
+package org.tyas.upnp;
 
 public class UpnpDeviceType implements Upnp.DeviceType
 {
@@ -45,5 +45,13 @@ public class UpnpDeviceType implements Upnp.DeviceType
 		if (! "device".equals(ar[2])) return null;
 
 		return new UpnpDeviceType(ar[1], ar[3], ar[4]);
+	}
+
+	public static DeviceType getByUsn(String usn) {
+		String [] ar = usn.split("::", 0);
+
+		if (ar.length > 1) return getByUrn(ar[1]);
+
+		return null;
 	}
 }

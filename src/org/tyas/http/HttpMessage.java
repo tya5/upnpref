@@ -78,7 +78,23 @@ public abstract class HttpMessage implements Http.Message
 	}
 
 	@Override public String getHost() {
-		return getFirst(Http.HOST);
+		String host = getFirst(Http.HOST);
+
+		if (host == null) return null;
+
+		try {
+			return host.split(":", 0)[0];
+		} catch (Exception e) {
+			return "";
+		}
+	}
+
+	@Override public int getPort() {
+		try {
+			return getFirst(Http.HOST).split(":", 0)[1];
+		} catch (Exception e) {
+			return -1;
+		}
 	}
 
 	@Override public long getMaxAge() {

@@ -14,9 +14,7 @@ public class SsdpSearchRequest implements Ssdp.SearchRequest
 	private Http.Request mReq;
 	private HttpRequest  mReqMutable;
 
-	public SsdpSearchRequest(Http.Request req) {
-		if (! isValid(req)) throw new RuntimeException("Not SsdpSearchRequest");
-
+	private SsdpSearchRequest(Http.Request req) {
 		mReqMutable = null;
 		mReq = req;
 	}
@@ -62,6 +60,12 @@ public class SsdpSearchRequest implements Ssdp.SearchRequest
 		send(out);
 		byte [] data = out.toByteArray();
 		return new DatagramPacket(data, data.length);
+	}
+
+	public static SsdpSearchRequest getByHttpRequest(Http.Request req) {
+		if (! isValid(req)) return null;
+
+		return new SsdpSearchRequest(req);
 	}
 
 	public static boolean isValid(Http.Request req) {

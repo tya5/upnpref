@@ -1,4 +1,4 @@
-package org.tyas.upnp.device;
+package org.tyas.upnp;
 
 public class Upnp
 {

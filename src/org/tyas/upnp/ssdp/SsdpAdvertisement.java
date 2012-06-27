@@ -16,9 +16,7 @@ public class SsdpAdvertisement implements Ssdp.Advertisement
 	private Http.Request mReq;
 	private HttpRequest  mReqMutable;
 
-	public SsdpAdvertisement(Http.Request req) {
-		if (! isValid(req)) throw new RuntimeException("Not SsdpAdvertisement");
-
+	private SsdpAdvertisement(Http.Request req) {
 		mReqMutable = null;
 		mReq = req;
 	}
@@ -92,6 +90,12 @@ public class SsdpAdvertisement implements Ssdp.Advertisement
 		notify(out);
 		byte [] data = out.toByteArray();
 		return new DatagramPacket(data, data.length);
+	}
+
+	public static SsdpAdvertisement getByHttpRequest(Http.Request req) {
+		if (! isValid(req)) return null;
+
+		return new SsdpAdvertisement(req);
 	}
 
 	public static boolean isValid(Http.Request req) {

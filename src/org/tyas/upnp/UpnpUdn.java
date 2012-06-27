@@ -1,4 +1,4 @@
-package org.tyas.upnp.device;
+package org.tyas.upnp;
 
 public class Udn
 {
@@ -24,5 +24,13 @@ public class Udn
 		if (! "uuid".equals(ar[0])) return null;
 
 		return new Udn(ar[1]);
+	}
+
+	public static Udn getByUsn(String usn) {
+		String [] ar = usn.split("::", 0);
+
+		if (ar.length > 0) return getByUuid(ar[0]);
+
+		return null;
 	}
 }

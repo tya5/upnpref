@@ -76,19 +76,16 @@ public class SsdpServer
 
 					if (HttpResponse.isValid(msg)) {
 						HttpResponse resp = new HttpResponse(msg);
-						SsdpSearchResponse ssresp = new SsdpSearchResponse(resp);
-						if (handler != null) handler.onSearchResponse(ssresp, ctx);
+						SsdpSearchResponse ssresp = SsdpSearchResponse.getByHttpResponse(resp);
+						if ((ssresp != null) && (handler != null)) handler.onSearchResponse(ssresp, ctx);
 					}
 					if (HttpRequest.isValid(msg)) {
 						HttpRequest req = new HttpRequest(msg);
-						if (SsdpAdvertisement.isValid(req)) {
-							SsdpAdvertisement ssadv = new SsdpAdvertisement(req);
-							if (handler != null) handler.onAdvertisement(ssadv, ctx);
-						}
-						if (SsdpSearchRequest.isValid(req)) {
-							SsdpSearchRequest ssreq = new SsdpSearchRequest(req);
-							if (handler != null) handler.onSearchRequest(ssreq, ctx);
-						}
+						SsdpAdvertisement ssadv = SsdpAdvertisement.getByHttpRequest(req);
+						SsdpSearchRequest ssreq = SsdpSearchRequest.getByHttpRequest(req);
+						
+						if ((ssadv != null) && (handler != null)) handler.onAdvertisement(ssadv, ctx);
+						if ((ssreq != null) && (handler != null)) handler.onSearchRequest(ssreq, ctx);
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
