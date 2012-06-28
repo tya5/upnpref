@@ -69,12 +69,7 @@ public class Main
 
 	public static void main2(String [] args) {
 		try {
-
-			MulticastSocket sock = new MulticastSocket(Ssdp.DEFAULT_PORT);
-
-			sock.joinGroup(InetAddress.getByName(Ssdp.MULTICAST_HOST));
-
-			final SsdpFilter [] filters = new SsdpFilter[] {
+			SsdpFilter [] filters = new SsdpFilter[] {
 				new SsdpRootDeviceFilter() {
 					@Override protected void onAdded(Ssdp.RemoteDevicePointer ptr, InetAddress adr) {
 						System.out.println("add " + ptr.getUniqueServiceName());
@@ -118,14 +113,19 @@ public class Main
 			};
 
 			SsdpServer server = new SsdpServer();
+			MulticastSocket sock = new MulticastSocket(Ssdp.DEFAULT_PORT);
+			SsdpSearchRequest req = new SsdpSearchRequest()
+				.setHost(Ssdp.MULTICAST_HOST, Ssdp.DEFAULT_PORT)
+				.setMaxWaitTime(3)
+				.setMan(Ssdp.MAN_DISCOVER);
+
+			sock.joinGroup(InetAddress.getByName(Ssdp.MULTICAST_HOST));
+
 			for (SsdpFilter filter: filters) {
 				server.addHandler(filter.getSsdpHandler());
 
-				DatagramPacket pkt = new SsdpSearchRequest()
-					.setHost(Ssdp.MULTICAST_HOST + ":" + Ssdp.DEFAULT_PORT)
-					.setMaxWaitTime(5)
+				DatagramPacket pkt = req
 					.setSearchTarget(filter.getSearchTarget())
-					.setMan(Ssdp.MAN_DISCOVER)
 					.toDatagramPacket();
 
 				pkt.setAddress(InetAddress.getByName(Ssdp.MULTICAST_HOST));

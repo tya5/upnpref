@@ -36,6 +36,11 @@ public class SsdpSearchRequest implements Ssdp.SearchRequest
 		return this;
 	}
 
+	public SsdpSearchRequest setHost(String host, int port) {
+		mReqMutable.setHost(host, port);
+		return this;
+	}
+
 	public SsdpSearchRequest setMaxWaitTime(int seconds) {
 		mReqMutable.setInt(Ssdp.MX, seconds);
 		return this;
