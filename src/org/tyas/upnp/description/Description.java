@@ -2,9 +2,9 @@ package org.tyas.upnp.description;
 
 public class Description
 {
-	public interface Service
+	public interface ServiceElement
 	{
-		Device getParent();
+		DeviceElement getParent();
 		DeviceDescription getDeviceDescription();
 		UpnpServiceType getType();
 		UpnpServiceId getId();
@@ -13,9 +13,9 @@ public class Description
 		String getEventSubUrl();
 	}
 
-	public interface Device
+	public interface DeviceElement
 	{
-		Device getParent();
+		DeviceElement getParent();
 		DeviceDescription getDeviceDescription();
 		UpnpDeviceType getType();
 		String getFriendlyName();
@@ -33,8 +33,8 @@ public class Description
 		Set<UpnpServiceId> getServiceSet();
 		Set<UpnpUdn> getDeviceSet();
 
-		Service getService(UpnpServiceId id);
-		Device getDevice(UpnpUdn udn);
+		ServiceElement getService(UpnpServiceId id);
+		DeviceElement getDevice(UpnpUdn udn);
 	}
 
 	public interface DeviceDescription
@@ -42,7 +42,7 @@ public class Description
 		int getConfigId();
 		int getVersionMajor();
 		int getVersionMinor();
-		Device getRootDevice();
+		DeviceElement getRootDevice();
 	}
 
 	public interface ServiceDescription

@@ -9,13 +9,13 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Set;
 
-public class DeviceElement implements Description.Device
+public class DeviceElement implements Description.DeviceElement
 {
-	private Map<UpnpServiceId,UpnpService> mServiceMap
-		= new HashMap<UpnpServiceId,UpnpService>();
+	private Map<UpnpServiceId,ServiceElement> mServiceMap
+		= new HashMap<UpnpServiceId,ServiceElement>();
 	
-	private Map<UpnpUdn,UpnpDevice> mDeviceMap
-		= new HashMap<UpnpUdn,UpnpDevice>();
+	private Map<UpnpUdn,DeviceElement> mDeviceMap
+		= new HashMap<UpnpUdn,DeviceElement>();
 
 	private UpnpDeviceType mType;
 	private String mFriendlyName;
@@ -29,10 +29,19 @@ public class DeviceElement implements Description.Device
 	private UpnpUdn mUdn;
 	private String mUpc;
 	private String mPresentationUrl;
+	private DeviceElement mParent;
+	private DeviceDescription mDeviceDescription;
 
 	public DeviceElement(UpnpUdn udn) {
 		mUdn = udn;
 	}
+
+	private DeviceElement() {
+	}
+
+	@Override public DeviceElement getParent() { return mParent; }
+
+	@Override public DeviceDescription getDeviceDescription() { return mDeviceDescription; }
 
 	@Override public UpnpDeviceType getType() { return mType; }
 
@@ -66,76 +75,101 @@ public class DeviceElement implements Description.Device
 		return mDeviceMap.keySet();
 	}
 
-	@Override public UpnpService getService(UpnpServiceId id) {
+	@Override public ServiceElement getService(UpnpServiceId id) {
 		return mServiceMap.get(id);
 	}
 
-	@Override public UpnpDevice getDevice(UpnpUdn udn) {
+	@Override public DeviceElement getDevice(UpnpUdn udn) {
 		return mDeviceMap.get(udn);
 	}
 
-	public UpnpDevice setType(UpnpDeviceType type) {
+	private DeviceElement setUdn(UpnpUdn udn) {
+		mUdn = udn;
+		return this;
+	}
+
+	public DeviceElement setType(UpnpDeviceType type) {
 		mType = type;
 		return this;
 	}
 
-	public UpnpDevice setFriendlyName(String friendlyName) {
+	public DeviceElement setFriendlyName(String friendlyName) {
 		mFriendlyName = friendlyName;
 		return this;
 	}
 
-	public UpnpDevice setManufacturer(String manufacturer) {
+	public DeviceElement setManufacturer(String manufacturer) {
 		mManufacturer = manufacturer;
 		return this;
 	}
 
-	public UpnpDevice setManufacturerUrl(String manufacturerUrl) {
+	public DeviceElement setManufacturerUrl(String manufacturerUrl) {
 		mManufacturerUrl = manufacturerUrl;
 		return this;
 	}
 
-	public UpnpDevice setModelDescription(String desc) {
+	public DeviceElement setModelDescription(String desc) {
 		mModelDescription = desc;
 		return this;
 	}
 
-	public UpnpDevice setModelName(String name) {
+	public DeviceElement setModelName(String name) {
 		mModelName = name;
 		return this;
 	}
 
-	public UpnpDevice setModelNumber(String number) {
+	public DeviceElement setModelNumber(String number) {
 		mModelNumber = number;
 		return this;
 	}
 
-	public UpnpDevice setModelUrl(String url) {
+	public DeviceElement setModelUrl(String url) {
 		mModelUrl = url;
 		return this;
 	}
 
-	public UpnpDevice setSerialNumber(String serial) {
+	public DeviceElement setSerialNumber(String serial) {
 		mSerialNumber = serial;
 		return this;
 	}
 
-	public UpnpDevice setUpc(String upc) {
+	public DeviceElement setUpc(String upc) {
 		mUpc = upc;
 		return this;
 	}
 
-	public UpnpDevice setPresentationUrl(String url) {
+	public DeviceElement setPresentationUrl(String url) {
 		mPresentationUrl = url;
 		return this;
 	}
 
-	public UpnpDevice putService(UpnpService service) {
+	public DeviceElement putService(ServiceElement service) {
+		service.setParent(this);
+		service.setDeviceDescription(getDeviceDescription());
 		mServiceMap.put(service.getId(), service);
 		return this;
 	}
 
-	public UpnpDevice putDevice(UpnpDevice device) {
+	public DeviceElement putDevice(DeviceElement device) {
+		device.setParent(this);
+		device.setDeviceDescription(getDeviceDescription());
 		mDeviceMap.put(device.getUdn(), device);
+		return this;
+	}
+
+	public DeviceElement setParent(DeviceElement parent) {
+		mParent = parent;
+		return this;
+	}
+
+	public DeviceElement setDeviceDescription(DeviceDescription desc) {
+		mDeviceDescription = desc;
+		for (DeviceElement d: DeviceMap.values()) {
+			d.setDeviceDescription(desc);
+		}
+		for (ServiceElement s: mServiceMap.values()) {
+			s.setDeviceDescription(desc);
+		}
 		return this;
 	}
 
@@ -145,6 +179,62 @@ public class DeviceElement implements Description.Device
 	public static DeviceElement createDeviceElement(Element elmDevice) {
 		if (! "device".equals(elmDevice.getTagName())) return null;
 
+		Node node = elmDevice.getFirstChild();
+		DeviceElement dev = new DeviceElement();
+
+		for (; node != null; node = node.getNextSibling()) {
+			if (node.getNodeType() != Node.ELEMENT_TYPE) continue;
+
+			String tag = ((Element)node).getTagName();
+
+			if (tag == null) {
+				;
+			} else if (tag.equals("deviceType")) {
+				dev.setDeviceType(UpnpDeviceType.getByUrn(node.getFirstChild().getNodeValue()));
+			} else if (tag.equals("friendlyName")) {
+				dev.setFriendlyName(node.getFirstChild().getNodeValue());
+			} else if (tag.equals("manufacturer")) {
+				dev.setManufacturer(node.getFirstChild().getNodeValue());
+			} else if (tag.equals("manufacturerURL")) {
+				dev.setManufacturerUrl(node.getFirstChild().getNodeValue());
+			} else if (tag.equals("modelDescription")) {
+				dev.setModelDescription(node.getFirstChild().getNodeValue());
+			} else if (tag.equals("modelName")) {
+				dev.setModelName(node.getFirstChild().getNodeValue());
+			} else if (tag.equals("modelNumber")) {
+				dev.setModelNumber(node.getFirstChild().getNodeValue());
+			} else if (tag.equals("modelURL")) {
+				dev.setModelUrl(node.getFirstChild().getNodeValue());
+			} else if (tag.equals("serialNumber")) {
+				dev.setSerialNumber(node.getFirstChild().getNodeValue());
+			} else if (tag.equals("UDN")) {
+				dev.setUdn(UpnpUdn.getByUuid(node.getFirstChild().getNodeValue()));
+			} else if (tag.equals("UPC")) {
+				dev.setUpc(node.getFirstChild().getNodeValue());
+			} else if (tag.equals("iconList")) {
+				;
+			} else if (tag.equals("serviceList")) {
+				Node s = node.getFirstChild();
+				for (; s != null; s = s.getNextSibling()) {
+					if (s.getNodeType() != Node.ELEMENT_TYPE) continue;
+					ServiceElement se = ServiceElement.createServiceElement((Element)s);
+					if (se != null) dev.putService(se);
+				}
+			} else if (tag.equals("deviceList")) {
+				Node d = node.getFirstChild();
+				for (; d != null; d = d.getNextSibling()) {
+					if (d.getNodeType() == Node.ELEMENT_TYPE) {
+						DeviceElement de = DeviceElement.createDeviceElement((Element)d);
+						if (de != null) dev.putDevice(de);
+					}
+				}
+			} else if (tag.equals("presentationURL")) {
+				dev.setPresentationUrl(node.getFirstChild().getNodeValue());
+			}
+		}
 		
+		if (dev.getUdn == null) return null;
+
+		return dev;
 	}
 }

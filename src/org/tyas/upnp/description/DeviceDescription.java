@@ -12,7 +12,9 @@ public class DeviceDescription implements Description.DeviceDescription
 		mVersionMajor = major;
 		mVersionMinor = minor;
 		mRootDevice = root;
-		mRootDeviceMutable = null;
+
+		root.setParent(null);
+		root.setDeviceDescription(this);
 	}
 
 	@Override public int getConfigId() { return mConfigId; }
