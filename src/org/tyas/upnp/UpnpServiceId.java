@@ -24,8 +24,19 @@ public class UpnpServiceId
 		return mId;
 	}
 
-	public String toString() {
+	@Override public String toString() {
 		return "urn:" + mDomain + ":serviceId:" + mId;
+	}
+
+	@Override public int hashCode() {
+		return toString().hashCode();
+	}
+
+	@Override public boolean equals(Object obj) {
+		if (obj instanceof UpnpServiceId) {
+			return toString().equals(((UpnpServiceId)obj).toString());
+		}
+		return false;
 	}
 
 	public static UpnpServiceId getByUrn(String urn) {
