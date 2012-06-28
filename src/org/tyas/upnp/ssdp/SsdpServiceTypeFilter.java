@@ -6,7 +6,13 @@ public class SsdpServiceTypeFilter extends SsdpFilter
 {
 	private UpnpServiceType mType;
 
+	public SsdpServiceTypeFilter(Listener listener, UpnpServiceType type) {
+		super(listener);
+		mType = type;
+	}
+
 	public SsdpServiceTypeFilter(UpnpServiceType type) {
+		super();
 		mType = type;
 	}
 

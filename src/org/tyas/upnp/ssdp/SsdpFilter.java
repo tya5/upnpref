@@ -9,7 +9,44 @@ import java.net.InetAddress;
 
 public abstract class SsdpFilter
 {
+	public interface Listener
+	{
+		protected void onAdded(Ssdp.RemoteDevicePointer ptr, InetAddress addr) {}
+		protected void onRemoved(Ssdp.RemoteDevicePointer ptr, InetAddress addr) {}
+		protected void onAlive(Ssdp.RemoteDevicePointer ptr, InetAddress addr) {}
+		protected void onUpdate(Ssdp.RemoteDevicePointer ptr, InetAddress addr) {}
+		protected void onByebye(Ssdp.RemoteDevicePointer ptr, InetAddress addr) {}
+		protected void onFound(Ssdp.RemoteDevicePointer ptr, InetAddress addr) {}
+	}
+
 	private Map<UpnpUsn,Ssdp.RemoteDevicePointer> mMap = new HashMap<UpnpUsn,Ssdp.RemoteDevicePointer>();
+	private Listener mListener = new Listener() {
+			@Override protected void onAdded(Ssdp.RemoteDevicePointer ptr, InetAddress addr) {
+				SsdpFilter.this.onAdded(ptr, addr);
+			}
+			@Override protected void onRemoved(Ssdp.RemoteDevicePointer ptr, InetAddress addr) {
+				SsdpFilter.this.onRemoved(ptr, addr);
+			}
+			@Override protected void onAlive(Ssdp.RemoteDevicePointer ptr, InetAddress addr) {
+				SsdpFilter.this.onAlive(ptr, addr);
+			}
+			@Override protected void onUpdate(Ssdp.RemoteDevicePointer ptr, InetAddress addr) {
+				SsdpFilter.this.onUpdate(ptr, addr);
+			}
+			@Override protected void onByebye(Ssdp.RemoteDevicePointer ptr, InetAddress addr) {
+				SsdpFilter.this.onByebye(ptr, addr);
+			}
+			@Override protected void onFound(Ssdp.RemoteDevicePointer ptr, InetAddress addr) {
+				SsdpFilter.this.onFound(ptr, addr);
+			}
+		};
+
+	protected SsdpFilter(Listener listener) {
+		mListener = listener;
+	}
+
+	protected SsdpFilter() {
+	}
 
 	public abstract SsdpServer.Handler getSsdpHandler();
 

@@ -2,6 +2,14 @@ package org.tyas.upnp.ssdp;
 
 public class SsdpRootDeviceFilter extends SsdpFilter
 {
+	public SsdpRootDeviceFilter(Listener listener) {
+		super(listener);
+	}
+
+	public SsdpRootDeviceFilter() {
+		super();
+	}
+
 	@Override public SsdpServer.Handler getSsdpHandler() { return mHandler; }
 
 	@Override public String getSearchTarget() { return Ssdp.ROOT_DEVICE; }

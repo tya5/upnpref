@@ -6,7 +6,13 @@ public class SsdpDeviceFilter extends SsdpFilter
 {
 	private UpnpUdn mUdn;
 
+	public SsdpDeviceFilter(Listener listener, UpnpUdn udn) {
+		super(listener);
+		mUdn = udn;
+	}
+
 	public SsdpDeviceFilter(UpnpUdn udn) {
+		super();
 		mUdn = udn;
 	}
 
