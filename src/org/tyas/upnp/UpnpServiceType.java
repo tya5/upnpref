@@ -18,20 +18,31 @@ public class UpnpServiceType
 		this(SCHEMAS_UPNP_ORG, type, version);
 	}
 
-	@Override public String getDomain() {
+	public String getDomain() {
 		return mDomain;
 	}
 
-	@Override public String getType() {
+	public String getType() {
 		return mType;
 	}
 
-	@Override public String getVersion() {
+	public String getVersion() {
 		return mVersion;
 	}
 
 	@Override public String toString() {
 		return "urn:" + mDomain + ":service:" + mType + ":" + mVersion;
+	}
+
+	@Override public int hashCode() {
+		return toString().hashCode();
+	}
+
+	@Override public boolean equals(Object obj) {
+		if (obj instanceof UpnpServiceType) {
+			return toString().equals(((UpnpServiceType)obj).toString());
+		}
+		return false;
 	}
 
 	public static UpnpServiceType getByUrn(String urn) {
@@ -46,7 +57,7 @@ public class UpnpServiceType
 		return new UpnpServiceType(ar[1], ar[3], ar[4]);
 	}
 
-	public static ServiceType getByUsn(String usn) {
+	public static UpnpServiceType getByUsn(String usn) {
 		String [] ar = usn.split("::", 0);
 
 		if (ar.length > 1) return getByUrn(ar[1]);

@@ -31,11 +31,22 @@ public class UpnpDeviceType
 		return mVersion;
 	}
 
-	public String toString() {
+	@Override public String toString() {
 		return "urn:" + mDomain + ":device:" + mType + ":" + mVersion;
 	}
 
-	public static DeviceType getByUrn(String urn) {
+	@Override public int hashCode() {
+		return toString().hashCode();
+	}
+
+	@Override public boolean equals(Object obj) {
+		if (obj instanceof UpnpDeviceType) {
+			return toString().equals(((UpnpDeviceType)obj).toString());
+		}
+		return false;
+	}
+
+	public static UpnpDeviceType getByUrn(String urn) {
 		String [] ar = urn.split(":", 0);
 
 		if (ar.length != 5) return null;
@@ -47,7 +58,7 @@ public class UpnpDeviceType
 		return new UpnpDeviceType(ar[1], ar[3], ar[4]);
 	}
 
-	public static DeviceType getByUsn(String usn) {
+	public static UpnpDeviceType getByUsn(String usn) {
 		String [] ar = usn.split("::", 0);
 
 		if (ar.length > 1) return getByUrn(ar[1]);

@@ -1,6 +1,6 @@
-package org.tyas.upnp.device;
+package org.tyas.upnp;
 
-public class UpnpServiceId implements Upnp.ServiceId
+public class UpnpServiceId
 {
 	public static final String UPNP_ORG = "upnp-org";
 		
@@ -16,15 +16,15 @@ public class UpnpServiceId implements Upnp.ServiceId
 		this(UPNP_ORG, id);
 	}
 
-	@Override public String getDomain() {
+	public String getDomain() {
 		return mDomain;
 	}
 
-	@Override public String getId() {
+	public String getId() {
 		return mId;
 	}
 
-	@Override public String toString() {
+	public String toString() {
 		return "urn:" + mDomain + ":serviceId:" + mId;
 	}
 

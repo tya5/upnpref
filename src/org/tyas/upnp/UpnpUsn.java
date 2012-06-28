@@ -22,7 +22,7 @@ public class UpnpUsn
 		return UpnpUdn.getByUuid(mPrefix);
 	}
 
-	public String toString() {
+	@Override public String toString() {
 		if (mPrefix == null) return "";
 
 		if (mSuffix == null) return mPrefix;
@@ -30,9 +30,20 @@ public class UpnpUsn
 		return mPrefix + "::" + mSuffix;
 	}
 
+	@Override public int hashCode() {
+		return toString().hashCode();
+	}
+
+	@Override public boolean equals(Object obj) {
+		if (obj instanceof UpnpUsn) {
+			return toString().equals(((UpnpUsn)obj).toString());
+		}
+		return false;
+	}
+
 	public static UpnpUsn getByString(String usn) {
 		String [] ar = usn.split("::");
 
-		return new UpnpUsn(ar > 0 ? ar[0]:null, ar > 1 ? ar[1]:null);
+		return new UpnpUsn(ar.length > 0 ? ar[0]:null, ar.length > 1 ? ar[1]:null);
 	}
 }

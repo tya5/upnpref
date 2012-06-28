@@ -9,6 +9,8 @@ import java.net.DatagramPacket;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.io.IOException;
+import java.util.Set;
+import java.util.HashSet;
 
 public class SsdpServer
 {
@@ -28,6 +30,7 @@ public class SsdpServer
 	}
 
 	private int mBuffSize;
+	private Set<Handler> mHandlerSet = new HashSet<Handler>();
 
 	private Handler mHandler = new Handler() {
 			@Override public void onAdvertisement(Ssdp.Advertisement adv, Context ctx) {
@@ -42,22 +45,23 @@ public class SsdpServer
 		};
 
 	public SsdpServer(int buffSize, Handler handler) {
-		this(buffSize);
+		mBuffSize = buffSize;
 		mHandler = handler;
+	}
 
 	public SsdpServer(int buffSize) {
 		mBuffSize = buffSize;
+	}
+
+	public SsdpServer(Handler handler) {
+		this(DEFAULT_RECEIVE_BUFFER_SIZE, handler);
 	}
 
 	public SsdpServer() {
 		this(DEFAULT_RECEIVE_BUFFER_SIZE);
 	}
 
-	public Runnable accept(DatagramSocket socket) throws IOException {
-		return accept(socket, mHandler);
-	}
-
-	public Runnable accept(final DatagramSocket socket, final Handler handler) throws IOException {
+	public Runnable accept(final DatagramSocket socket) throws IOException {
 		if (socket == null) return null;
 
 		byte [] buff = new byte[mBuffSize];
@@ -77,21 +81,57 @@ public class SsdpServer
 					if (HttpResponse.isValid(msg)) {
 						HttpResponse resp = new HttpResponse(msg);
 						SsdpSearchResponse ssresp = SsdpSearchResponse.getByHttpResponse(resp);
-						if ((ssresp != null) && (handler != null)) handler.onSearchResponse(ssresp, ctx);
+						if (ssresp != null) performOnSearchResponse(ssresp, ctx);
 					}
 					if (HttpRequest.isValid(msg)) {
 						HttpRequest req = new HttpRequest(msg);
 						SsdpAdvertisement ssadv = SsdpAdvertisement.getByHttpRequest(req);
 						SsdpSearchRequest ssreq = SsdpSearchRequest.getByHttpRequest(req);
 						
-						if ((ssadv != null) && (handler != null)) handler.onAdvertisement(ssadv, ctx);
-						if ((ssreq != null) && (handler != null)) handler.onSearchRequest(ssreq, ctx);
+						if (ssadv != null) performOnAdvertisement(ssadv, ctx);
+						if (ssreq != null) performOnSearchRequest(ssreq, ctx);
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
 		};
+	}
+
+	public void addHandler(Handler handler) {
+		if (handler != null) {
+			mHandlerSet.add(handler);
+		}
+	}
+
+	public void removeHandler(Handler handler) {
+		if (handler != null) {
+			mHandlerSet.remove(handler);
+		}
+	}
+
+	private void performOnAdvertisement(Ssdp.Advertisement adv, Context ctx) {
+		if (mHandler != null) mHandler.onAdvertisement(adv, ctx);
+
+		for (Handler handler: mHandlerSet) {
+			if (handler != null) handler.onAdvertisement(adv, ctx);
+		}
+	}
+	
+	private void performOnSearchRequest(Ssdp.SearchRequest req, Context ctx) {
+		if (mHandler != null) mHandler.onSearchRequest(req, ctx);
+
+		for (Handler handler: mHandlerSet) {
+			if (handler != null) handler.onSearchRequest(req, ctx);
+		}
+	}
+	
+	private void performOnSearchResponse(Ssdp.SearchResponse resp, Context ctx) {
+		if (mHandler != null) mHandler.onSearchResponse(resp, ctx);
+
+		for (Handler handler: mHandlerSet) {
+			if (handler != null) handler.onSearchResponse(resp, ctx);
+		}
 	}
 
 	protected void onAdvertisement(Ssdp.Advertisement adv, Context ctx) {}

@@ -83,7 +83,7 @@ public abstract class HttpMessage implements Http.Message
 		if (host == null) return null;
 
 		try {
-			return host.split(":", 0)[0];
+			return host.split(":")[0];
 		} catch (Exception e) {
 			return "";
 		}
@@ -91,7 +91,7 @@ public abstract class HttpMessage implements Http.Message
 
 	@Override public int getPort() {
 		try {
-			return getFirst(Http.HOST).split(":", 0)[1];
+			return Integer.decode(getFirst(Http.HOST).split(":")[1]);
 		} catch (Exception e) {
 			return -1;
 		}

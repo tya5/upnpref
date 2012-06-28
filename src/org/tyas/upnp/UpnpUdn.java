@@ -4,7 +4,7 @@ public class UpnpUdn
 {
 	private String mUuid;
 
-	public Udn(String uuid) {
+	public UpnpUdn(String uuid) {
 		mUuid = uuid;
 	}
 
@@ -12,17 +12,28 @@ public class UpnpUdn
 		return mUuid;
 	}
 
-	public String toString() {
+	@Override public String toString() {
 		return "uuid:" + mUuid;
 	}
 
-	public static Udn getByUuid(String udn) {
+	@Override public int hashCode() {
+		return toString().hashCode();
+	}
+
+	@Override public boolean equals(Object obj) {
+		if (obj instanceof UpnpUdn) {
+			return toString().equals(((UpnpUdn)obj).toString());
+		}
+		return false;
+	}
+
+	public static UpnpUdn getByUuid(String udn) {
 		String [] ar = udn.split(":", 0);
 
 		if (ar.length != 2) return null;
 
 		if (! "uuid".equals(ar[0])) return null;
 
-		return new Udn(ar[1]);
+		return new UpnpUdn(ar[1]);
 	}
 }

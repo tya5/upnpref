@@ -1,14 +1,23 @@
 package org.tyas.upnp.device;
 
+import org.tyas.upnp.Upnp;
+import org.tyas.upnp.UpnpUdn;
+import org.tyas.upnp.UpnpDeviceType;
+import org.tyas.upnp.UpnpServiceId;
+
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Set;
+
 public class UpnpDevice implements Upnp.Device
 {
-	private Map<Upnp.ServiceId,UpnpService> mServiceMap
-		= new HashMap<Upnp.ServiceId,UpnpService>();
+	private Map<UpnpServiceId,UpnpService> mServiceMap
+		= new HashMap<UpnpServiceId,UpnpService>();
 	
-	private Map<Upnp.Udn,UpnpDevice> mDeviceMap
-		= new HashMap<Upnp.Udn,UpnpDevice>();
+	private Map<UpnpUdn,UpnpDevice> mDeviceMap
+		= new HashMap<UpnpUdn,UpnpDevice>();
 
-	private Upnp.DeviceType mType;
+	private UpnpDeviceType mType;
 	private String mFriendlyName;
 	private String mManufacturer;
 	private String mManufacturerUrl;
@@ -17,21 +26,21 @@ public class UpnpDevice implements Upnp.Device
 	private String mModelNumber;
 	private String mModelUrl;
 	private String mSerialNumber;
-	private Upnp.Udn mUdn;
+	private UpnpUdn mUdn;
 	private String mUpc;
 	private String mPresentationUrl;
 
-	public UpnpDevice(Upnp.Udn udn) {
+	public UpnpDevice(UpnpUdn udn) {
 		mUdn = udn;
 	}
 
-	@Override public DeviceType getType() { return mType; }
+	@Override public UpnpDeviceType getType() { return mType; }
 
 	@Override public String getFriendlyName() { return mFriendlyName; }
 
 	@Override public String getManufacturer() { return mManufacturer; }
 
-	@Override public String getManufacturerUrl() { return mManufacturerUrl}
+	@Override public String getManufacturerUrl() { return mManufacturerUrl; }
 
 	@Override public String getModelDescription() { return mModelDescription; }
 
@@ -43,29 +52,29 @@ public class UpnpDevice implements Upnp.Device
 
 	@Override public String getSerialNumber() { return mSerialNumber; }
 
-	@Override public Udn getUdn() { return mUdn; }
+	@Override public UpnpUdn getUdn() { return mUdn; }
 
 	@Override public String getUpc() { return mUpc; }
 
 	@Override public String getPresentationUrl() { return mPresentationUrl; }
 
-	@Override public Set<Upnp.ServiceId> getServiceSet() {
+	@Override public Set<UpnpServiceId> getServiceSet() {
 		return mServiceMap.keySet();
 	}
 
-	@Override public Set<Upnp.Udn> getDeviceSet() {
+	@Override public Set<UpnpUdn> getDeviceSet() {
 		return mDeviceMap.keySet();
 	}
 
-	@Override public UpnpService getService(Upnp.ServiceId id) {
+	@Override public UpnpService getService(UpnpServiceId id) {
 		return mServiceMap.get(id);
 	}
 
-	@Override public UpnpDevice getDevice(Upnp.Udn udn) {
+	@Override public UpnpDevice getDevice(UpnpUdn udn) {
 		return mDeviceMap.get(udn);
 	}
 
-	public UpnpDevice setType(Upnp.DeviceType type) {
+	public UpnpDevice setType(UpnpDeviceType type) {
 		mType = type;
 		return this;
 	}

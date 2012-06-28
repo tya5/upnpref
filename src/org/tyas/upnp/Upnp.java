@@ -1,17 +1,13 @@
 package org.tyas.upnp;
 
+import java.util.Set;
+
 public class Upnp
 {
-	public interface ServiceId
-	{
-		String getDomain();
-		String getId();
-	}
-
 	public interface Service
 	{
-		ServiceType getType();
-		ServiceId getId();
+		UpnpServiceType getType();
+		UpnpServiceId getId();
 		String getScpdUrl();
 		String getControlUrl();
 		String getEventSubUrl();
@@ -19,7 +15,7 @@ public class Upnp
 
 	public interface Device
 	{
-		DeviceType getType();
+		UpnpDeviceType getType();
 		String getFriendlyName();
 		String getManufacturer();
 		String getManufacturerUrl();
@@ -28,14 +24,14 @@ public class Upnp
 		String getModelNumber();
 		String getModelUrl();
 		String getSerialNumber();
-		Udn getUdn();
+		UpnpUdn getUdn();
 		String getUpc();
 		String getPresentationUrl();
 
-		Set<ServiceId> getServiceSet();
-		Set<Udn> getDeviceSet();
+		Set<UpnpServiceId> getServiceSet();
+		Set<UpnpUdn> getDeviceSet();
 
-		Service getService(ServiceId id);
-		Device getDevice(Udn udn);
+		Service getService(UpnpServiceId id);
+		Device getDevice(UpnpUdn udn);
 	}
 }

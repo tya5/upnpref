@@ -26,6 +26,7 @@ public class Ssdp
 	public static final String NTS_BYEBYE = "ssdp:byebye";
 	public static final String NTS_UPDATE = "ssdp:update";
 	public static final String MAN_DISCOVER = "\"ssdp:discover\"";
+	public static final String ROOT_DEVICE = "upnp:rootdevice";
 
 	public interface RemoteDevicePointer
 	{
@@ -35,6 +36,7 @@ public class Ssdp
 		int getBootId();
 		int getConfigId();
 		int getSearchPort();
+		//String getServerName();
 	}
 
 	public interface Advertisement extends RemoteDevicePointer
@@ -42,7 +44,6 @@ public class Ssdp
 		String getHost();
 		String getNotificationType();
 		String getNotificationSubType();
-		//String getServerName();
 	}
 
 	public interface SearchRequest
@@ -56,7 +57,6 @@ public class Ssdp
 	public interface SearchResponse extends RemoteDevicePointer
 	{
 		//Date getDate();
-		//String getServerName();
 		String getSearchTarget();
 	}
 }
