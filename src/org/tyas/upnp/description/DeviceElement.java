@@ -1,9 +1,11 @@
-package org.tyas.upnp.device;
+package org.tyas.upnp.description;
 
 import org.tyas.upnp.Upnp;
 import org.tyas.upnp.UpnpUdn;
 import org.tyas.upnp.UpnpDeviceType;
 import org.tyas.upnp.UpnpServiceId;
+
+import org.w3c.dom.*;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -164,7 +166,7 @@ public class DeviceElement implements Description.DeviceElement
 
 	public DeviceElement setDeviceDescription(DeviceDescription desc) {
 		mDeviceDescription = desc;
-		for (DeviceElement d: DeviceMap.values()) {
+		for (DeviceElement d: mDeviceMap.values()) {
 			d.setDeviceDescription(desc);
 		}
 		for (ServiceElement s: mServiceMap.values()) {
@@ -174,6 +176,7 @@ public class DeviceElement implements Description.DeviceElement
 	}
 
 	public Element toXmlElement() {
+		return null;
 	}
 
 	public static DeviceElement createDeviceElement(Element elmDevice) {
@@ -183,14 +186,14 @@ public class DeviceElement implements Description.DeviceElement
 		DeviceElement dev = new DeviceElement();
 
 		for (; node != null; node = node.getNextSibling()) {
-			if (node.getNodeType() != Node.ELEMENT_TYPE) continue;
+			if (node.getNodeType() != Node.ELEMENT_NODE) continue;
 
 			String tag = ((Element)node).getTagName();
 
 			if (tag == null) {
 				;
 			} else if (tag.equals("deviceType")) {
-				dev.setDeviceType(UpnpDeviceType.getByUrn(node.getFirstChild().getNodeValue()));
+				dev.setType(UpnpDeviceType.getByUrn(node.getFirstChild().getNodeValue()));
 			} else if (tag.equals("friendlyName")) {
 				dev.setFriendlyName(node.getFirstChild().getNodeValue());
 			} else if (tag.equals("manufacturer")) {
@@ -216,14 +219,14 @@ public class DeviceElement implements Description.DeviceElement
 			} else if (tag.equals("serviceList")) {
 				Node s = node.getFirstChild();
 				for (; s != null; s = s.getNextSibling()) {
-					if (s.getNodeType() != Node.ELEMENT_TYPE) continue;
+					if (s.getNodeType() != Node.ELEMENT_NODE) continue;
 					ServiceElement se = ServiceElement.createServiceElement((Element)s);
 					if (se != null) dev.putService(se);
 				}
 			} else if (tag.equals("deviceList")) {
 				Node d = node.getFirstChild();
 				for (; d != null; d = d.getNextSibling()) {
-					if (d.getNodeType() == Node.ELEMENT_TYPE) {
+					if (d.getNodeType() == Node.ELEMENT_NODE) {
 						DeviceElement de = DeviceElement.createDeviceElement((Element)d);
 						if (de != null) dev.putDevice(de);
 					}
@@ -233,7 +236,7 @@ public class DeviceElement implements Description.DeviceElement
 			}
 		}
 		
-		if (dev.getUdn == null) return null;
+		if (dev.getUdn() == null) return null;
 
 		return dev;
 	}

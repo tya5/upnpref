@@ -1,5 +1,8 @@
 package org.tyas.upnp.description;
 
+import org.w3c.dom.*;
+import javax.xml.parsers.*;
+
 public class DeviceDescription implements Description.DeviceDescription
 {
 	private int mConfigId;
@@ -7,7 +10,7 @@ public class DeviceDescription implements Description.DeviceDescription
 	private int mVersionMinor;
 	private DeviceElement mRootDevice;
 	
-	public DeviceDescription(int configid, int major, int minor, Device root) {
+	public DeviceDescription(int configid, int major, int minor, DeviceElement root) {
 		mConfigId = configid;
 		mVersionMajor = major;
 		mVersionMinor = minor;
@@ -32,10 +35,10 @@ public class DeviceDescription implements Description.DeviceDescription
 	public static DeviceDescription createDeviceDescription(Document doc) {
 		Node node;
 
-		node = doc.getFirshChild();
+		node = doc.getFirstChild();
 
 		for (; node != null; node = node.getNextSibling()) {
-			if (node.getNodeType() == ELEMENT_TYPE) {
+			if (node.getNodeType() == Node.ELEMENT_NODE) {
 				if ("root".equals(((Element)node).getTagName())) {
 					break;
 				}
@@ -48,12 +51,12 @@ public class DeviceDescription implements Description.DeviceDescription
 		int configid = Integer.decode(root.getAttribute("configId"));
 		int major = -1;
 		int minor = -1;
-		Device dev = null;
+		DeviceElement dev = null;
 
 		node = root.getFirstChild();
 
 		for (; node != null; node = node.getNextSibling()) {
-			if (node.getNodeType() == ELEMENT_TYPE) {
+			if (node.getNodeType() == Node.ELEMENT_NODE) {
 				String tag = ((Element)node).getTagName();
 
 				if (tag == null) {
@@ -64,15 +67,15 @@ public class DeviceDescription implements Description.DeviceDescription
 					Node spec = node.getFirstChild();
 
 					for (; spec != null; spec = spec.getNextSibling()) {
-						if (spec.getNodeType() == ELEMENT_TYPE) {
+						if (spec.getNodeType() == Node.ELEMENT_NODE) {
 							String tag2 = ((Element)spec).getTagName();
 
 							if (tag2 == null) {
 								;
 							} else if (tag2.equals("major")) {
-								major = spec.getFirstChild().getNodeValue();
+								major = Integer.decode(spec.getFirstChild().getNodeValue());
 							} else if (tag2.equals("minor")) {
-								minor = spec.getFirstChild().getNodeValue();
+								minor = Integer.decode(spec.getFirstChild().getNodeValue());
 							}
 						}
 					}

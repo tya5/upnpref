@@ -1,8 +1,10 @@
-package org.tyas.upnp.device;
+package org.tyas.upnp.description;
 
 import org.tyas.upnp.Upnp;
 import org.tyas.upnp.UpnpServiceType;
 import org.tyas.upnp.UpnpServiceId;
+
+import org.w3c.dom.*;
 
 public class ServiceElement implements Description.ServiceElement
 {
@@ -35,7 +37,7 @@ public class ServiceElement implements Description.ServiceElement
 
 	@Override public String getEventSubUrl() { return mEventSubUrl; }
 
-	private ServiceElementsetId(UpnpServiceId id) {
+	private ServiceElement setId(UpnpServiceId id) {
 		mId = id;
 		return this;
 	}
@@ -60,12 +62,12 @@ public class ServiceElement implements Description.ServiceElement
 		return this;
 	}
 
-	public DeviceElement setParent(DeviceElement parent) {
+	public ServiceElement setParent(DeviceElement parent) {
 		mParent = parent;
 		return this;
 	}
 
-	public DeviceElement setDeviceDescription(DeviceDescription desc) {
+	public ServiceElement setDeviceDescription(DeviceDescription desc) {
 		mDeviceDescription = desc;
 		return this;
 	}
@@ -80,7 +82,7 @@ public class ServiceElement implements Description.ServiceElement
 		ServiceElement serv = new ServiceElement();
 
 		for (; node != null; node = node.getNextSibling()) {
-			if (node.getNodeType() != Node.ELEMENT_TYPE) continue;
+			if (node.getNodeType() != Node.ELEMENT_NODE) continue;
 
 			String tag = ((Element)node).getTagName();
 

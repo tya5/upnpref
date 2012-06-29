@@ -9,7 +9,7 @@ import java.net.InetAddress;
 
 public abstract class SsdpFilter
 {
-	public interface Listener
+	public static class Listener
 	{
 		protected void onAdded(Ssdp.RemoteDevicePointer ptr, InetAddress addr) {}
 		protected void onRemoved(Ssdp.RemoteDevicePointer ptr, InetAddress addr) {}
