@@ -86,10 +86,10 @@ public class Main
 			new SsdpDeviceFilter(listener, new UpnpUdn("9a4bd800-1dd1-11b2-8000-003a9d6522f5")),
 		};
 
-		listen(filters, 3);
+		listen(filters, 3, false);
 	}
 
-	public static void listen(SsdpFilter [] filters, int mx) {
+	public static void listen(SsdpFilter [] filters, int mx, boolean all) {
 		SsdpServer server = new SsdpServer();
 		SsdpSearchRequest req = new SsdpSearchRequest()
 			.setHost(Ssdp.MULTICAST_HOST, Ssdp.DEFAULT_PORT)
@@ -100,12 +100,24 @@ public class Main
 			MulticastSocket sock = new MulticastSocket(Ssdp.DEFAULT_PORT);
 
 			sock.joinGroup(InetAddress.getByName(Ssdp.MULTICAST_HOST));
-
+			
 			for (SsdpFilter filter: filters) {
 				server.addHandler(filter.getSsdpHandler());
 
+				if (! all) {
+					DatagramPacket pkt = req
+						.setSearchTarget(filter.getSearchTarget())
+						.toDatagramPacket();
+
+					pkt.setAddress(InetAddress.getByName(Ssdp.MULTICAST_HOST));
+					pkt.setPort(Ssdp.DEFAULT_PORT);
+					sock.send(pkt);
+				}
+			}
+
+			if (all) {
 				DatagramPacket pkt = req
-					.setSearchTarget(filter.getSearchTarget())
+					.setSearchTarget(Ssdp.ST_ALL)
 					.toDatagramPacket();
 
 				pkt.setAddress(InetAddress.getByName(Ssdp.MULTICAST_HOST));

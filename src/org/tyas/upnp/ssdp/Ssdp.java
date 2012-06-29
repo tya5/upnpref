@@ -22,6 +22,7 @@ public class Ssdp
 	public static final String MULTICAST_HOST = "239.255.255.250";
 	public static final int DEFAULT_PORT = 1900;
 
+	public static final String ST_ALL = "ssdp:all";
 	public static final String NTS_ALIVE = "ssdp:alive";
 	public static final String NTS_BYEBYE = "ssdp:byebye";
 	public static final String NTS_UPDATE = "ssdp:update";
