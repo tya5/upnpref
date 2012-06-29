@@ -193,27 +193,27 @@ public class DeviceElement implements Description.DeviceElement
 			if (tag == null) {
 				;
 			} else if (tag.equals("deviceType")) {
-				dev.setType(UpnpDeviceType.getByUrn(node.getFirstChild().getNodeValue()));
+				dev.setType(UpnpDeviceType.getByUrn(Description.getStringByTag(node)));
 			} else if (tag.equals("friendlyName")) {
-				dev.setFriendlyName(node.getFirstChild().getNodeValue());
+				dev.setFriendlyName(Description.getStringByTag(node));
 			} else if (tag.equals("manufacturer")) {
-				dev.setManufacturer(node.getFirstChild().getNodeValue());
+				dev.setManufacturer(Description.getStringByTag(node));
 			} else if (tag.equals("manufacturerURL")) {
-				dev.setManufacturerUrl(node.getFirstChild().getNodeValue());
+				dev.setManufacturerUrl(Description.getStringByTag(node));
 			} else if (tag.equals("modelDescription")) {
-				dev.setModelDescription(node.getFirstChild().getNodeValue());
+				dev.setModelDescription(Description.getStringByTag(node));
 			} else if (tag.equals("modelName")) {
-				dev.setModelName(node.getFirstChild().getNodeValue());
+				dev.setModelName(Description.getStringByTag(node));
 			} else if (tag.equals("modelNumber")) {
-				dev.setModelNumber(node.getFirstChild().getNodeValue());
+				dev.setModelNumber(Description.getStringByTag(node));
 			} else if (tag.equals("modelURL")) {
-				dev.setModelUrl(node.getFirstChild().getNodeValue());
+				dev.setModelUrl(Description.getStringByTag(node));
 			} else if (tag.equals("serialNumber")) {
-				dev.setSerialNumber(node.getFirstChild().getNodeValue());
+				dev.setSerialNumber(Description.getStringByTag(node));
 			} else if (tag.equals("UDN")) {
-				dev.setUdn(UpnpUdn.getByUuid(node.getFirstChild().getNodeValue()));
+				dev.setUdn(UpnpUdn.getByUuid(Description.getStringByTag(node)));
 			} else if (tag.equals("UPC")) {
-				dev.setUpc(node.getFirstChild().getNodeValue());
+				dev.setUpc(Description.getStringByTag(node));
 			} else if (tag.equals("iconList")) {
 				;
 			} else if (tag.equals("serviceList")) {
@@ -232,7 +232,7 @@ public class DeviceElement implements Description.DeviceElement
 					}
 				}
 			} else if (tag.equals("presentationURL")) {
-				dev.setPresentationUrl(node.getFirstChild().getNodeValue());
+				dev.setPresentationUrl(Description.getStringByTag(node));
 			}
 		}
 		

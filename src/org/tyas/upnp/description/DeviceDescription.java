@@ -1,7 +1,6 @@
 package org.tyas.upnp.description;
 
 import org.w3c.dom.*;
-import javax.xml.parsers.*;
 
 public class DeviceDescription implements Description.DeviceDescription
 {
@@ -32,7 +31,7 @@ public class DeviceDescription implements Description.DeviceDescription
 		return null;
 	}
 
-	public static DeviceDescription createDeviceDescription(Document doc) {
+	public static DeviceDescription getByDocument(Document doc) {
 		Node node;
 
 		node = doc.getFirstChild();
@@ -47,13 +46,12 @@ public class DeviceDescription implements Description.DeviceDescription
 
 		if (node == null) return null;
 
-		Element root = (Element)node;
-		int configid = Integer.decode(root.getAttribute("configId"));
+		int configid = Description.getIntAttrByTag(node, "configId", 0);
 		int major = -1;
 		int minor = -1;
 		DeviceElement dev = null;
 
-		node = root.getFirstChild();
+		node = node.getFirstChild();
 
 		for (; node != null; node = node.getNextSibling()) {
 			if (node.getNodeType() == Node.ELEMENT_NODE) {
@@ -73,9 +71,9 @@ public class DeviceDescription implements Description.DeviceDescription
 							if (tag2 == null) {
 								;
 							} else if (tag2.equals("major")) {
-								major = Integer.decode(spec.getFirstChild().getNodeValue());
+								major = Description.getIntByTag(spec, -1);
 							} else if (tag2.equals("minor")) {
-								minor = Integer.decode(spec.getFirstChild().getNodeValue());
+								minor = Description.getIntByTag(spec, -1);
 							}
 						}
 					}

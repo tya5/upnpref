@@ -5,6 +5,8 @@ import org.tyas.upnp.UpnpServiceType;
 import org.tyas.upnp.UpnpServiceId;
 import org.tyas.upnp.UpnpUdn;
 
+import org.w3c.dom.*;
+
 import java.util.Set;
 
 public class Description
@@ -54,5 +56,49 @@ public class Description
 
 	public interface ServiceDescription
 	{
+	}
+
+	public static String getStringByTag(Node node) {
+		if (node.getNodeType() != Node.ELEMENT_NODE) return "";
+
+		Element elm = ((Element)node);
+
+		Node c = node.getFirstChild();
+
+		if (c == null) return "";
+
+		String s = c.getNodeValue();
+
+		return s == null ? "": s;
+	}
+
+	public static int getIntByTag(Node node, int defaultValue) {
+		String s = getStringByTag(node);
+
+		try {
+			return Integer.decode(s);
+		} catch (Exception e) {
+			return defaultValue;
+		}
+	}
+
+	public static String getStringAttrByTag(Node node, String attr) {
+		if (node.getNodeType() != Node.ELEMENT_NODE) return "";
+
+		Element e = ((Element)node);
+
+		String s = e.getAttribute(attr);
+
+		return s == null ? "": s;
+	}
+
+	public static int getIntAttrByTag(Node node, String attr, int defaultValue) {
+		String s = getStringAttrByTag(node, attr);
+
+		try {
+			return Integer.decode(s);
+		} catch (Exception e) {
+			return defaultValue;
+		}
 	}
 }

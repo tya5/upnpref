@@ -42,7 +42,9 @@ public abstract class SsdpFilter
 		};
 
 	protected SsdpFilter(Listener listener) {
-		mListener = listener;
+		if (listener != null) {
+			mListener = listener;
+		}
 	}
 
 	protected SsdpFilter() {
@@ -72,26 +74,26 @@ public abstract class SsdpFilter
 		} else if (nts.equals(Ssdp.NTS_ALIVE)) {
 			if (mMap.keySet().contains(usn)) {
 				mMap.put(usn, adv);
-				onAlive(adv, addr);
+				mListener.onAlive(adv, addr);
 			} else {
 				mMap.put(usn, adv);
-				onAdded(adv, addr);
-				onAlive(adv, addr);
+				mListener.onAdded(adv, addr);
+				mListener.onAlive(adv, addr);
 			}
 		} else if (nts.equals(Ssdp.NTS_UPDATE)) {
 			if (mMap.keySet().contains(usn)) {
 				mMap.put(usn, adv);
-				onUpdate(adv, addr);
+				mListener.onUpdate(adv, addr);
 			} else {
 				mMap.put(usn, adv);
-				onAdded(adv, addr);
-				onUpdate(adv, addr);
+				mListener.onAdded(adv, addr);
+				mListener.onUpdate(adv, addr);
 			}
 		} else if (nts.equals(Ssdp.NTS_BYEBYE)) {
 			if (mMap.keySet().contains(usn)) {
 				mMap.remove(usn);
-				onByebye(adv, addr);
-				onRemoved(adv, addr);
+				mListener.onByebye(adv, addr);
+				mListener.onRemoved(adv, addr);
 			}
 		}
 	}
@@ -101,11 +103,11 @@ public abstract class SsdpFilter
 
 		if (mMap.keySet().contains(usn)) {
 			mMap.put(usn, ptr);
-			onFound(ptr, addr);
+			mListener.onFound(ptr, addr);
 		} else {
 			mMap.put(usn, ptr);
-			onAdded(ptr, addr);
-			onFound(ptr, addr);
+			mListener.onAdded(ptr, addr);
+			mListener.onFound(ptr, addr);
 		}
 	}
 

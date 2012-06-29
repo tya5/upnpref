@@ -73,6 +73,7 @@ public class ServiceElement implements Description.ServiceElement
 	}
 
 	public Element toXmlElement() {
+		return null;
 	}
 
 	public static ServiceElement createServiceElement(Element elmService) {
@@ -89,15 +90,15 @@ public class ServiceElement implements Description.ServiceElement
 			if (tag == null) {
 				;
 			} else if (tag.equals("serviceType")) {
-				serv.setType(UpnpServiceType.getByUrn(node.getFirstChild().getNodeValue()));
+				serv.setType(UpnpServiceType.getByUrn(Description.getStringByTag(node)));
 			} else if (tag.equals("serviceId")) {
-				serv.setId(UpnpServiceId.getByUrn(node.getFirstChild().getNodeValue()));
+				serv.setId(UpnpServiceId.getByUrn(Description.getStringByTag(node)));
 			} else if (tag.equals("SCPDURL")) {
-				serv.setScpdUrl(node.getFirstChild().getNodeValue());
+				serv.setScpdUrl(Description.getStringByTag(node));
 			} else if (tag.equals("controlURL")) {
-				serv.setControlUrl(node.getFirstChild().getNodeValue());
+				serv.setControlUrl(Description.getStringByTag(node));
 			} else if (tag.equals("eventSubURL")) {
-				serv.setEventSubUrl(node.getFirstChild().getNodeValue());
+				serv.setEventSubUrl(Description.getStringByTag(node));
 			}
 		}
 
