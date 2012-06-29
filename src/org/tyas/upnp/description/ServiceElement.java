@@ -90,15 +90,15 @@ public class ServiceElement implements Description.ServiceElement
 			if (tag == null) {
 				;
 			} else if (tag.equals("serviceType")) {
-				serv.setType(UpnpServiceType.getByUrn(Description.getStringByTag(node)));
+				serv.setType(UpnpServiceType.getByUrn(Description.getStringByNode(node)));
 			} else if (tag.equals("serviceId")) {
-				serv.setId(UpnpServiceId.getByUrn(Description.getStringByTag(node)));
+				serv.setId(UpnpServiceId.getByUrn(Description.getStringByNode(node)));
 			} else if (tag.equals("SCPDURL")) {
-				serv.setScpdUrl(Description.getStringByTag(node));
+				serv.setScpdUrl(Description.getStringByNode(node));
 			} else if (tag.equals("controlURL")) {
-				serv.setControlUrl(Description.getStringByTag(node));
+				serv.setControlUrl(Description.getStringByNode(node));
 			} else if (tag.equals("eventSubURL")) {
-				serv.setEventSubUrl(Description.getStringByTag(node));
+				serv.setEventSubUrl(Description.getStringByNode(node));
 			}
 		}
 

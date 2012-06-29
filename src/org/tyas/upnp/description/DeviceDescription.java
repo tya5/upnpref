@@ -46,7 +46,7 @@ public class DeviceDescription implements Description.DeviceDescription
 
 		if (node == null) return null;
 
-		int configid = Description.getIntAttrByTag(node, "configId", 0);
+		int configid = Description.getIntAttrByNode(node, "configId", 0);
 		int major = -1;
 		int minor = -1;
 		DeviceElement dev = null;
@@ -71,9 +71,9 @@ public class DeviceDescription implements Description.DeviceDescription
 							if (tag2 == null) {
 								;
 							} else if (tag2.equals("major")) {
-								major = Description.getIntByTag(spec, -1);
+								major = Description.getIntByNode(spec, -1);
 							} else if (tag2.equals("minor")) {
-								minor = Description.getIntByTag(spec, -1);
+								minor = Description.getIntByNode(spec, -1);
 							}
 						}
 					}

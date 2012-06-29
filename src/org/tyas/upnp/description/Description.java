@@ -8,6 +8,7 @@ import org.tyas.upnp.UpnpUdn;
 import org.w3c.dom.*;
 
 import java.util.Set;
+import java.util.List;
 
 public class Description
 {
@@ -54,11 +55,51 @@ public class Description
 		DeviceElement getRootDevice();
 	}
 
-	public interface ServiceDescription
+	public interface ArgumentElement
 	{
+		String getName();
+		boolean isDirectionIn();
+		boolean isRetval();
+		String getStateVariableName();
 	}
 
-	public static String getStringByTag(Node node) {
+	public interface ActionElement
+	{
+		String getName();
+		int getArgumentsLength();
+		ArgumentElement getArgument(int idx);
+	}
+
+	public interface ValueRangeElement
+	{
+		String getMinimum();
+		String getMaximum();
+		String getStep();
+	}
+
+	public interface StateElement
+	{
+		boolean isSendEvents();
+		boolean isMulticast();
+		String getName();
+		String getDataType();
+		String getDefaultValue();
+		ValueRangeElement getValueRange();
+		List<String> getValueList();
+	}
+
+	public interface ServiceDescription
+	{
+		int getConfigId();
+		int getVersionMajor();
+		int getVersionMinor();
+		Set<String> getActionNameSet();
+		Set<String> getStateNameSet();
+		ActionElement getActionElement(String name);
+		StateElement getStateElement(String name);
+	}
+
+	public static String getStringByNode(Node node) {
 		if (node.getNodeType() != Node.ELEMENT_NODE) return "";
 
 		Element elm = ((Element)node);
@@ -72,8 +113,8 @@ public class Description
 		return s == null ? "": s;
 	}
 
-	public static int getIntByTag(Node node, int defaultValue) {
-		String s = getStringByTag(node);
+	public static int getIntByNode(Node node, int defaultValue) {
+		String s = getStringByNode(node);
 
 		try {
 			return Integer.decode(s);
@@ -82,7 +123,7 @@ public class Description
 		}
 	}
 
-	public static String getStringAttrByTag(Node node, String attr) {
+	public static String getStringAttrByNode(Node node, String attr) {
 		if (node.getNodeType() != Node.ELEMENT_NODE) return "";
 
 		Element e = ((Element)node);
@@ -92,8 +133,8 @@ public class Description
 		return s == null ? "": s;
 	}
 
-	public static int getIntAttrByTag(Node node, String attr, int defaultValue) {
-		String s = getStringAttrByTag(node, attr);
+	public static int getIntAttrByNode(Node node, String attr, int defaultValue) {
+		String s = getStringAttrByNode(node, attr);
 
 		try {
 			return Integer.decode(s);
