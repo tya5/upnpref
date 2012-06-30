@@ -14,10 +14,10 @@ import java.net.DatagramPacket;
 
 public class SsdpSearchResponse extends HttpResponse implements Ssdp.SearchResponse
 {
-	public static class Const extends HttpResponse implements Ssdp.SearchResponse
+	public static class Const extends HttpResponse.Const implements Ssdp.SearchResponse
 	{
 		private Const(HttpResponse.Const c) {
-			super(c, Http.VERSION_1_1, "200", "OK");
+			super(c);
 		}
 
 		@Override public URL getDescriptionUrl() {
