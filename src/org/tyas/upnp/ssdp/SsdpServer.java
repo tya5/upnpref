@@ -1,6 +1,7 @@
 package org.tyas.upnp.ssdp;
 
 import org.tyas.http.Http;
+import org.tyas.http.HttpMessage;
 import org.tyas.http.HttpRequest;
 import org.tyas.http.HttpResponse;
 
@@ -18,9 +19,9 @@ public class SsdpServer
 
 	public interface Handler
 	{
-		void onAdvertisement(Ssdp.Advertisement adv, Context ctx);
-		void onSearchRequest(Ssdp.SearchRequest req, Context ctx);
-		void onSearchResponse(Ssdp.SearchResponse resp, Context ctx);
+		void onAdvertisement(SsdpAdvertisement.Const adv, Context ctx);
+		void onSearchRequest(SsdpSearchRequest.Const req, Context ctx);
+		void onSearchResponse(SsdpSearchResponse.Const resp, Context ctx);
 	}
 
 	public interface Context
@@ -33,13 +34,13 @@ public class SsdpServer
 	private Set<Handler> mHandlerSet = new HashSet<Handler>();
 
 	private Handler mHandler = new Handler() {
-			@Override public void onAdvertisement(Ssdp.Advertisement adv, Context ctx) {
+			@Override public void onAdvertisement(SsdpAdvertisement.Const adv, Context ctx) {
 				SsdpServer.this.onAdvertisement(adv, ctx);
 			}
-			@Override public void onSearchRequest(Ssdp.SearchRequest req, Context ctx) {
+			@Override public void onSearchRequest(SsdpSearchRequest.Const req, Context ctx) {
 				SsdpServer.this.onSearchRequest(req, ctx);
 			}
-			@Override public void onSearchResponse(Ssdp.SearchResponse resp, Context ctx) {
+			@Override public void onSearchResponse(SsdpSearchResponse.Const resp, Context ctx) {
 				SsdpServer.this.onSearchResponse(resp, ctx);
 			}
 		};
@@ -76,20 +77,31 @@ public class SsdpServer
 			@Override public void run() {
 				try {
 					InputStream in = new ByteArrayInputStream(pkt.getData());
-					Http.Message msg = Http.readMessage(in).getMessage();
-
-					if (HttpResponse.isValid(msg)) {
-						HttpResponse resp = new HttpResponse(msg);
-						SsdpSearchResponse ssresp = SsdpSearchResponse.getByHttpResponse(resp);
-						if (ssresp != null) performOnSearchResponse(ssresp, ctx);
+					HttpMessage.Input msg = HttpMessage.readMessage(in);
+					
+					HttpResponse.Input resp = HttpResponse.getByInput(msg);
+					if (resp != null) {
+						SsdpSearchResponse.Const ssresp = SsdpSearchResponse.getByHttpResponse(resp);
+						if (ssresp != null) {
+							performOnSearchResponse(ssresp, ctx);
+							return;
+						}
 					}
-					if (HttpRequest.isValid(msg)) {
-						HttpRequest req = new HttpRequest(msg);
-						SsdpAdvertisement ssadv = SsdpAdvertisement.getByHttpRequest(req);
-						SsdpSearchRequest ssreq = SsdpSearchRequest.getByHttpRequest(req);
+					
+					HttpRequest.Input req = HttpRequest.getByInput(msg);
+					if (req != null) {
 						
-						if (ssadv != null) performOnAdvertisement(ssadv, ctx);
-						if (ssreq != null) performOnSearchRequest(ssreq, ctx);
+						SsdpAdvertisement.Const ssadv = SsdpAdvertisement.getByHttpRequest(req);
+						if (ssadv != null) {
+							performOnAdvertisement(ssadv, ctx);
+							return;
+						}
+
+						SsdpSearchRequest.Const ssreq = SsdpSearchRequest.getByHttpRequest(req);
+						if (ssreq != null) {
+							performOnSearchRequest(ssreq, ctx);
+							return;
+						}
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -110,7 +122,7 @@ public class SsdpServer
 		}
 	}
 
-	private void performOnAdvertisement(Ssdp.Advertisement adv, Context ctx) {
+	private void performOnAdvertisement(SsdpAdvertisement.Const adv, Context ctx) {
 		if (mHandler != null) mHandler.onAdvertisement(adv, ctx);
 
 		for (Handler handler: mHandlerSet) {
@@ -118,7 +130,7 @@ public class SsdpServer
 		}
 	}
 	
-	private void performOnSearchRequest(Ssdp.SearchRequest req, Context ctx) {
+	private void performOnSearchRequest(SsdpSearchRequest.Const req, Context ctx) {
 		if (mHandler != null) mHandler.onSearchRequest(req, ctx);
 
 		for (Handler handler: mHandlerSet) {
@@ -126,7 +138,7 @@ public class SsdpServer
 		}
 	}
 	
-	private void performOnSearchResponse(Ssdp.SearchResponse resp, Context ctx) {
+	private void performOnSearchResponse(SsdpSearchResponse.Const resp, Context ctx) {
 		if (mHandler != null) mHandler.onSearchResponse(resp, ctx);
 
 		for (Handler handler: mHandlerSet) {
@@ -134,7 +146,7 @@ public class SsdpServer
 		}
 	}
 
-	protected void onAdvertisement(Ssdp.Advertisement adv, Context ctx) {}
-	protected void onSearchRequest(Ssdp.SearchRequest req, Context ctx) {}
-	protected void onSearchResponse(Ssdp.SearchResponse resp, Context ctx) {}
+	protected void onAdvertisement(SsdpAdvertisement.Const adv, Context ctx) {}
+	protected void onSearchRequest(SsdpSearchRequest.Const req, Context ctx) {}
+	protected void onSearchResponse(SsdpSearchResponse.Const resp, Context ctx) {}
 }

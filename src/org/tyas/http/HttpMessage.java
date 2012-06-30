@@ -9,43 +9,77 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.IOException;
+import java.io.FilterInputStream;
+import java.io.ByteArrayOutputStream;
 import java.net.URI;
 import java.net.URL;
 
-public abstract class HttpMessage implements Http.Message
+public abstract class HttpMessage extends AbsHttpMessage
 {
+	public static abstract class Const extends AbsHttpMessage
+	{
+		private Map<String,List<String>> mMap;
+
+		private Const() {
+			mMap = new HashMap<String,List<String>>();
+		}
+
+		public Const(AbsHttpMessage msg) {
+			this();
+
+			for (String key: msg.keySet()) {
+				mMap.put(key, new ArrayList<String>(msg.get(key)));
+			}
+		}
+
+		public Const(Const c) {
+			mMap = c.mMap;
+		}
+
+		@Override public Set<String> keySet() {
+			return mMap.keySet();
+		}
+
+		@Override public List<String> get(String name) {
+			return mMap.get(name);
+		}
+	}
+
+	public static abstract class Input extends Const
+	{
+		private InputStream mInput;
+
+		public InputStream getInputStream() {
+			return mInput;
+		}
+
+		public Const toConst() {
+			final String start = getStartLine();
+			
+			return new Const(this) {
+				@Override public String getStartLine() { return start; }
+			};
+		}
+	}
+
 	private Map<String,List<String>> mMap = new HashMap<String,List<String>>();
+
+	private static final String [] mReservedTab = new String [] {
+		Http.HOST,
+		Http.LOCATION,
+		Http.TRANSFER_ENCODING,
+		Http.CONTENT_LENGTH,
+		Http.SERVER,
+		Http.CACHE_CONTROL,
+		Http.CONNECTION,
+		Http.KEEP_ALIVE,
+	};
 
 	public HttpMessage() {}
 
-	public HttpMessage(Http.Message msg) {
+	public HttpMessage(AbsHttpMessage msg) {
 		for (String key: msg.keySet()) {
-			for (String val: msg.get(key)) put(key, val);
-		}
-	}
-
-	@Override public List<String> get(String name) {
-		return mMap.get(name);
-	}
-
-	@Override public String getFirst(String name) {
-		List<String> list = get(name);
-		return list == null || list.size() == 0 ? null: list.get(0);
-	}
-
-	@Override public int getInt(String name, int defaultValue) {
-		try {
-			return Integer.decode(getFirst(name));
-		} catch (Exception e) {
-			return defaultValue;
-		}
-	}
-
-	@Override public long getLong(String name, long defaultValue) {
-		try {
-			return Long.decode(getFirst(name));
-		} catch (Exception e) {
-			return defaultValue;
+			mMap.put(key, new ArrayList<String>(msg.get(key)));
 		}
 	}
 
@@ -53,96 +87,31 @@ public abstract class HttpMessage implements Http.Message
 		return mMap.keySet();
 	}
 
-	@Override public boolean isKeepAlive() {
-		for (String token: get(Http.CONNECTION)) {
-			String upper = token.toUpperCase();
-			
-			if (upper.equals(Http.CLOSE))
+	@Override public List<String> get(String name) {
+		return mMap.get(name);
+	}
+
+	public Const toConst() {
+		final String start = getStartLine();
+		
+		return new Const(this) {
+			@Override public String getStartLine() { return start; }
+		};
+	}
+
+	private boolean isReserved(String name) {
+		name = name == null ? null : name.toUpperCase();
+
+		for (String mask: mReservedTab) {
+			if (mask.equals(name.toUpperCase())) {
 				return false;
-			
-			if (upper.equals(Http.KEEP_ALIVE)) {
-				return (get(Http.KEEP_ALIVE) != null);
-			}
-		}
-		return false;
-	}
-
-	@Override public boolean isChunkedEncoding() {
-		String te = getFirst(Http.TRANSFER_ENCODING);
-		return (te != null) && Http.CHUNKED.equals(te.toUpperCase());
-	}
-
-	@Override public long getContentLength() {
-		String cl = getFirst(Http.CONTENT_LENGTH);
-		return cl == null ? -1: Long.decode(cl);
-	}
-
-	@Override public String getHost() {
-		String host = getFirst(Http.HOST);
-
-		if (host == null) return null;
-
-		try {
-			return host.split(":")[0];
-		} catch (Exception e) {
-			return "";
-		}
-	}
-
-	@Override public int getPort() {
-		try {
-			return Integer.decode(getFirst(Http.HOST).split(":")[1]);
-		} catch (Exception e) {
-			return -1;
-		}
-	}
-
-	@Override public long getMaxAge() {
-		List<String> list = get(Http.CACHE_CONTROL);
-
-		if (list == null) return -1;
-
-		for (String item: list) {
-			int idx = item.indexOf(Http.MAX_AGE);
-			if (idx >= 0) {
-				idx = item.indexOf('=', idx + Http.MAX_AGE.length());
-				if (idx >= 0) {
-					try {
-						return Long.decode(item.substring(idx + 1).trim());
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
 			}
 		}
 
-		return -1;
+		return true;
 	}
-
-	@Override public URI getLocation() {
-		try {
-			return new URI(getFirst(Http.LOCATION));
-		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
-		}
-	}
-
-	public void setMaxAge(long max) {
-		List<String> list = get(Http.CACHE_CONTROL);
-
-		if (list != null) {
-			for (String item: list) {
-				int idx = item.indexOf(Http.MAX_AGE);
-				if (idx >= 0) {
-					list.remove(item);
-				}
-			}
-		}
-		put(Http.CACHE_CONTROL, Http.MAX_AGE + "=" + max);
-	}
-
-	public void put(String name, String value) {
+		
+	private void putImpl(String name, String value) {
 		List<String> list = get(name);
 
 		if (list == null) {
@@ -153,7 +122,7 @@ public abstract class HttpMessage implements Http.Message
 		list.add(value);
 	}
 
-	public void putFirst(String name, String value) {
+	private void putFirstImpl(String name, String value) {
 		List<String> list = get(name);
 
 		if (list == null) {
@@ -166,57 +135,154 @@ public abstract class HttpMessage implements Http.Message
 		list.add(value);
 	}
 
-	public void setInt(String name, int value) {
-		putFirst(name, "" + value);
+	public boolean put(String name, String value) {
+		if (! isReserved(name)) return false;
+		
+		putImpl(name, value);
+		return true;
 	}
 
-	public void remove(String name) {
-		mMap.remove(name);
+	public boolean putFirst(String name, String value) {
+		if (! isReserved(name)) return false;
+
+		putFirstImpl(name, value);
+		return true;
 	}
 
-	public void setHost(String host, int port) {
+	public HttpMessage setInt(String name, int value) {
+		putFirst(name, "" + value); return this;
+	}
+
+	public HttpMessage remove(String name) {
+		mMap.remove(name); return this;
+	}
+
+	public HttpMessage setHost(String host, int port) {
 		if (port < 0) {
 			setHost(host);
 		} else {
-			putFirst(Http.HOST, host + ":" + port);
+			putFirstImpl(Http.HOST, host + ":" + port);
 		}
+		return this;
 	}
 
-	public void setHost(String host) {
-		putFirst(Http.HOST, host);
+	public HttpMessage setHost(String host) {
+		putFirstImpl(Http.HOST, host); return this;
 	}
 
-	public void setLocation(String uri) {
-		putFirst(Http.LOCATION, uri);
+	public HttpMessage setLocation(String uri) {
+		putFirstImpl(Http.LOCATION, uri); return this;
 	}
 
-	public void setLocation(URI uri) {
-		setLocation(uri.toString());
+	public HttpMessage setLocation(URI uri) {
+		setLocation(uri.toString()); return this;
 	}
 
-	public void putServerToken(String product) {
-		put(Http.SERVER, product);
+	public HttpMessage putServerToken(String product) {
+		putImpl(Http.SERVER, product); return this;
 	}
 
-	public OutputStream send(OutputStream out) throws IOException {
-		validate();
-		return Http.writeMessage(out, this, 256);
+	public HttpMessage setMaxAge(long max) {
+		List<String> list = get(Http.CACHE_CONTROL);
+
+		if (list != null) {
+			for (String item: list) {
+				int idx = item.indexOf(Http.MAX_AGE);
+				if (idx >= 0) {
+					list.remove(item);
+				}
+			}
+		}
+		put(Http.CACHE_CONTROL, Http.MAX_AGE + "=" + max);
+		return this;
 	}
 
-	public void send(OutputStream out, byte [] entity) throws IOException {
-		validate();
-		Http.writeMessage(out, this, entity);
+
+	/**
+	 * Make entity body stream for input.
+	 *
+	 * @param in InputStream for general message
+	 * @return general message
+	 */
+	public static Input readMessage(InputStream in) throws IOException {
+		final String startLine = readLine(in).trim();
+
+		Input inp = new Input() {
+				@Override public String getStartLine() { return startLine; }
+			};
+		Const msg = (Const)inp;
+		
+		String line = readLine(in);
+
+		while (line.length() > 0) {
+			int mid = line.indexOf(':');
+			if (mid < 0) break;
+			String name = line.substring(0, mid).trim().toUpperCase();
+			String [] vals = line.substring(mid + 1).split(",", 0);
+			List<String> l = new ArrayList<String>();
+			msg.mMap.put(name, l);
+			for (String val : vals) l.add(val.trim());
+			line = readLine(in);
+		}
+
+		if (msg.isChunkedEncoding()) {
+			inp.mInput = new FilterInputStream(in) {
+					int remain = 0;
+					@Override public int read() throws IOException {
+						if (remain < 0) {
+							return -1;
+						}
+						if (remain == 0) {
+							remain = Integer.decode("0x" + readLine(in).trim());
+						}
+						int b = in.read();
+						remain--;
+						if (remain == 0) {
+							readLine(in);
+						}
+						return b;
+					}
+				};
+		} else {
+			long tmp = msg.getContentLength();
+			if (tmp >= Integer.MAX_VALUE) throw new IOException();
+			final int contentSize = (int)tmp;
+
+			inp.mInput = (contentSize <= 0) ? null: new FilterInputStream(in) {
+					int ofs = 0;
+					@Override public int read() throws IOException {
+						if (ofs >= contentSize) {
+							return -1;
+						}
+						
+						int b = in.read();
+						if (b < 0) {
+							ofs = contentSize;
+							return -1;
+						}
+
+						ofs++;
+						return b;
+					}
+				};
+		}
+
+		return inp;
 	}
 
-	public void send(OutputStream out, InputStream in) throws IOException {
-		validate();
-		Http.writeMessage(out, this, in);
-	}
+	private static String readLine(InputStream in) throws IOException {
+		ByteArrayOutputStream lineBuf = new ByteArrayOutputStream();
+		byte readBuf[] = new byte[1];
+		
+		int	readLen = in.read(readBuf);
+		while (0 < readLen) {
+			if (readBuf[0] == Http.LF)
+				break;
+			if (readBuf[0] != Http.CR) 
+				lineBuf.write(readBuf[0]);
+			readLen = in.read(readBuf);
+		}
 
-	public void send(OutputStream out, File f) throws IOException {
-		validate();
-		Http.writeMessage(out, this, f);
+		return lineBuf.toString();
 	}
-
-	protected void validate() {}
 }

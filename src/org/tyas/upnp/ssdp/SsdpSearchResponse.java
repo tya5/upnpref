@@ -12,98 +12,89 @@ import java.net.URI;
 import java.net.URL;
 import java.net.DatagramPacket;
 
-public class SsdpSearchResponse implements Ssdp.SearchResponse
+public class SsdpSearchResponse extends HttpResponse implements Ssdp.SearchResponse
 {
-	private Http.Response mResp;
-	private HttpResponse  mRespMutable;
+	public static class Const extends HttpResponse implements Ssdp.SearchResponse
+	{
+		private Const(HttpResponse.Const c) {
+			super(c, Http.VERSION_1_1, "200", "OK");
+		}
 
-	private SsdpSearchResponse(Http.Response resp) {
-		mRespMutable = null;
-		mResp = resp;
+		@Override public URL getDescriptionUrl() {
+			try {
+				return getLocation().toURL();
+			} catch (Exception e) {
+				return null;
+			}
+		}
+
+		@Override public String getSearchTarget() { return getFirst(Ssdp.ST); }
+
+		@Override public UpnpUsn getUniqueServiceName() { return UpnpUsn.getByString(getFirst(Ssdp.USN)); }
+
+		@Override public int getBootId() { return getInt(Ssdp.BOOTID, 0); }
+
+		@Override public int getConfigId() { return getInt(Ssdp.CONFIGID, 0); }
+
+		@Override public int getSearchPort() { return getInt(Ssdp.SEARCHPORT, -1); }
+
+		@Override public DatagramPacket toDatagramPacket() throws IOException {
+			return Ssdp.toDatagramPacket(this);
+		}
 	}
 
 	public SsdpSearchResponse() {
-		mResp = mRespMutable = new HttpResponse(Http.VERSION_1_1, "200", "OK");
+		super(Http.VERSION_1_1, "200", "OK");
 	}
-
-	@Override public long getMaxAge() { return mResp.getMaxAge(); }
 
 	@Override public URL getDescriptionUrl() {
 		try {
-			return mResp.getLocation().toURL();
+			return getLocation().toURL();
 		} catch (Exception e) {
 			e.printStackTrace();
 			return null;
 		}
 	}
 
-	@Override public String getSearchTarget() { return mResp.getFirst(Ssdp.ST); }
+	@Override public String getSearchTarget() { return getFirst(Ssdp.ST); }
 
-	@Override public UpnpUsn getUniqueServiceName() { return UpnpUsn.getByString(mResp.getFirst(Ssdp.USN)); }
+	@Override public UpnpUsn getUniqueServiceName() { return UpnpUsn.getByString(getFirst(Ssdp.USN)); }
 
-	@Override public int getBootId() { return mResp.getInt(Ssdp.BOOTID, 0); }
+	@Override public int getBootId() { return getInt(Ssdp.BOOTID, 0); }
 
-	@Override public int getConfigId() { return mResp.getInt(Ssdp.CONFIGID, 0); }
+	@Override public int getConfigId() { return getInt(Ssdp.CONFIGID, 0); }
 
-	@Override public int getSearchPort() { return mResp.getInt(Ssdp.SEARCHPORT, -1); }
+	@Override public int getSearchPort() { return getInt(Ssdp.SEARCHPORT, -1); }
 
-	public SsdpSearchResponse setMaxAge(long max) {
-		mRespMutable.setMaxAge(max);
-		return this;
+	@Override public DatagramPacket toDatagramPacket() throws IOException {
+		return Ssdp.toDatagramPacket(this);
 	}
 
 	public SsdpSearchResponse setDescriptionUrl(String url) {
-		mRespMutable.setLocation(url);
-		return this;
+		setLocation(url); return this;
 	}
 
 	public SsdpSearchResponse setSearchTarget(String target) {
-		mRespMutable.putFirst(Ssdp.ST, target);
-		return this;
+		putFirst(Ssdp.ST, target); return this;
 	}
 
 	public SsdpSearchResponse setUniqueServiceName(String usn) {
-		mRespMutable.putFirst(Ssdp.USN, usn);
-		return this;
+		putFirst(Ssdp.USN, usn); return this;
 	}
 	
 	public SsdpSearchResponse setBootId(int id) {
-		mRespMutable.setInt(Ssdp.BOOTID, id);
-		return this;
+		setInt(Ssdp.BOOTID, id); return this;
 	}
 
 	public SsdpSearchResponse setConfigId(int id) {
-		mRespMutable.setInt(Ssdp.CONFIGID, id);
-		return this;
+		setInt(Ssdp.CONFIGID, id); return this;
 	}
 
 	public SsdpSearchResponse setSearchPort(int port) {
-		mRespMutable.setInt(Ssdp.SEARCHPORT, port);
-		return this;
+		setInt(Ssdp.SEARCHPORT, port); return this;
 	}
 
-	public void send(OutputStream out) throws IOException {
-		mRespMutable.send(out, (byte [])null);
-	}
-
-	public DatagramPacket toDatagramPacket() throws IOException {
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		send(out);
-		byte [] data = out.toByteArray();
-		return new DatagramPacket(data, data.length);
-	}
-
-	public static SsdpSearchResponse getByHttpResponse(Http.Response resp) {
-		if (! isValid(resp)) return null;
-
-		return new SsdpSearchResponse(resp);
-	}
-
-	public static boolean isValid(Http.Response resp) {
-		return true;
-	}
-
-	public static Ssdp.SearchResponse parse(InputStream in) throws IOException {
-		return new SsdpSearchResponse(HttpResponse.parse(in).getResponse());
+	public static SsdpSearchResponse.Const getByHttpResponse(HttpResponse.Const resp) {
+		return new SsdpSearchResponse.Const(resp);
 	}
 }

@@ -12,12 +12,12 @@ public class Main
 			ServerSocket sock = new ServerSocket(8080);
 
 			new HttpServer() {
-				@Override protected boolean handleHttpRequest(Http.InputRequest req, HttpServer.Context ctx) {
+				@Override protected boolean handleHttpRequest(HttpRequest.Input req, HttpServer.Context ctx) {
 					try {
-						System.out.println("RequestUri: " + req.getRequest().getRequestUri());
+						System.out.println("RequestUri: " + req.getRequestUri());
 
 						new HttpResponse(Http.VERSION_1_1, "200", "OK")
-							.send(ctx.getClient().getOutputStream(), new File(req.getRequest().getRequestUri()));
+							.send(ctx.getClient().getOutputStream(), new File(req.getRequestUri()));
 
 						return true;
 					} catch (Exception e) {

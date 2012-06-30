@@ -1,6 +1,11 @@
 package org.tyas.upnp.ssdp;
 
 import java.net.URL;
+import java.net.DatagramPacket;
+import java.io.IOException;
+import java.io.ByteArrayOutputStream;
+
+import org.tyas.http.Http;
 import org.tyas.upnp.UpnpUsn;
 
 public class Ssdp
@@ -40,24 +45,34 @@ public class Ssdp
 		//String getServerName();
 	}
 
-	public interface Advertisement extends RemoteDevicePointer
+	public interface Advertisement extends RemoteDevicePointer, Http.Request
 	{
 		String getHost();
 		String getNotificationType();
 		String getNotificationSubType();
+		DatagramPacket toDatagramPacket() throws IOException;
 	}
 
-	public interface SearchRequest
+	public interface SearchRequest extends Http.Request
 	{
 		String getHost();
 		int getMaxWaitTime();
 		String getSearchTarget();
 		String getMan();
+		DatagramPacket toDatagramPacket() throws IOException;
 	}
 
-	public interface SearchResponse extends RemoteDevicePointer
+	public interface SearchResponse extends RemoteDevicePointer, Http.Response
 	{
 		//Date getDate();
 		String getSearchTarget();
+		DatagramPacket toDatagramPacket() throws IOException;
+	}
+
+	public static DatagramPacket toDatagramPacket(Http.Message msg) throws IOException {
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		msg.send(out);
+		byte [] data = out.toByteArray();
+		return new DatagramPacket(data, data.length);
 	}
 }

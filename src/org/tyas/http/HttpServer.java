@@ -11,7 +11,7 @@ public class HttpServer
 {
 	public interface RequestHandler
 	{
-		boolean handleHttpRequest(Http.InputRequest req, Context ctx);
+		boolean handleHttpRequest(HttpRequest.Input req, Context ctx);
 	}
 
 	public interface Context extends Runnable
@@ -21,7 +21,7 @@ public class HttpServer
 	}
 
 	private RequestHandler mHandler = new RequestHandler() {
-			@Override public boolean handleHttpRequest(Http.InputRequest req, Context ctx) {
+			@Override public boolean handleHttpRequest(HttpRequest.Input req, Context ctx) {
 				HttpServer.this.handleHttpRequest(req, ctx);
 				return false;
 			}
@@ -46,7 +46,7 @@ public class HttpServer
 			}
 			@Override public void run() {
 				InputStream in;
-				Http.InputRequest req;
+				HttpRequest.Input req;
 				
 				try {
 					in = sock.getInputStream();
@@ -56,7 +56,7 @@ public class HttpServer
 						if (! handler.handleHttpRequest(req, this)) {
 							;
 						}
-					} while (req.getRequest().isKeepAlive());
+					} while (req.isKeepAlive());
 					
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -76,7 +76,7 @@ public class HttpServer
 		return accept(server, mHandler);
 	}
 
-	protected boolean handleHttpRequest(Http.InputRequest req, Context ctx) {
+	protected boolean handleHttpRequest(HttpRequest.Input req, Context ctx) {
 		return false;
 	}
 }

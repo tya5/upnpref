@@ -21,12 +21,14 @@ public class Main
 
 			sock.joinGroup(InetAddress.getByName(Ssdp.MULTICAST_HOST));
 
-			DatagramPacket pkt = new SsdpSearchRequest()
-				.setHost(Ssdp.MULTICAST_HOST + ":" + Ssdp.DEFAULT_PORT)
+			SsdpSearchRequest req = new SsdpSearchRequest()
 				.setMaxWaitTime(5)
 				.setSearchTarget("urn:schemas-upnp-org:device:MediaServer:1")
-				.setMan(Ssdp.MAN_DISCOVER)
-				.toDatagramPacket();
+				.setMan(Ssdp.MAN_DISCOVER);
+			
+			req.setHost(Ssdp.MULTICAST_HOST, Ssdp.DEFAULT_PORT);
+			
+			DatagramPacket pkt = req.toDatagramPacket();
 
 			pkt.setAddress(InetAddress.getByName(Ssdp.MULTICAST_HOST));
 			pkt.setPort(Ssdp.DEFAULT_PORT);
@@ -35,7 +37,7 @@ public class Main
 
 			for (int ii = 0; ; ii++) {
 				new SsdpServer() {
-					@Override protected void onAdvertisement(Ssdp.Advertisement adv, SsdpServer.Context ctx) {
+					@Override protected void onAdvertisement(SsdpAdvertisement.Const adv, SsdpServer.Context ctx) {
 						System.out.println("onAdvertisement");
 						System.out.println(" from:" + ctx.getPacket().getAddress());
 						System.out.println(" HOST:" + adv.getHost());
@@ -44,7 +46,7 @@ public class Main
 						System.out.println(" NTS:" + adv.getNotificationSubType());
 						System.out.println(" USN:" + adv.getUniqueServiceName());
 					}
-					@Override protected void onSearchRequest(Ssdp.SearchRequest sreq, SsdpServer.Context ctx) {
+					@Override protected void onSearchRequest(SsdpSearchRequest.Const sreq, SsdpServer.Context ctx) {
 						System.out.println("onSearchRequest");
 						System.out.println(" from:" + ctx.getPacket().getAddress());
 						System.out.println(" HOST:" + sreq.getHost());
@@ -52,7 +54,7 @@ public class Main
 						System.out.println(" MX:" + sreq.getMaxWaitTime());
 						System.out.println(" ST:" + sreq.getSearchTarget());
 					}
-					@Override protected void onSearchResponse(Ssdp.SearchResponse sresp, SsdpServer.Context ctx) {
+					@Override protected void onSearchResponse(SsdpSearchResponse.Const sresp, SsdpServer.Context ctx) {
 						System.out.println("onSearchResponse");
 						System.out.println(" from:" + ctx.getPacket().getAddress());
 						System.out.println(" LOCATION:" + sresp.getDescriptionUrl());
@@ -92,9 +94,9 @@ public class Main
 	public static void listen(SsdpFilter [] filters, int mx, boolean all) {
 		SsdpServer server = new SsdpServer();
 		SsdpSearchRequest req = new SsdpSearchRequest()
-			.setHost(Ssdp.MULTICAST_HOST, Ssdp.DEFAULT_PORT)
 			.setMaxWaitTime(mx)
 			.setMan(Ssdp.MAN_DISCOVER);
+		req.setHost(Ssdp.MULTICAST_HOST, Ssdp.DEFAULT_PORT);
 
 		try {
 			MulticastSocket sock = new MulticastSocket(Ssdp.DEFAULT_PORT);

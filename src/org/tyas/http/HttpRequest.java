@@ -6,6 +6,59 @@ import java.io.IOException;
 
 public class HttpRequest extends HttpMessage implements Http.Request
 {
+	public static class Const extends HttpMessage.Const implements Http.Request
+	{
+		private String mVersion;
+		private String mMethod;
+		private String mRequestUri;
+
+		private Const(HttpMessage.Const c, String m, String r, String v) {
+			super(c);
+			mVersion = v;
+			mMethod = m;
+			mRequestUri = r;
+		}
+
+		public Const(Const c) {
+			this(c, c.mMethod, c.mRequestUri, c.mVersion);
+		}
+
+		@Override public String getStartLine() {
+			return mMethod + " " + mRequestUri + " " + mVersion;
+		}
+
+		@Override public String getVersion() {
+			return mVersion;
+		}
+
+		@Override public String getMethod() {
+			return mMethod;
+		}
+
+		@Override public String getRequestUri() {
+			return mRequestUri;
+		}
+	}
+
+	public static class Input extends Const
+	{
+		private InputStream mInput;
+
+		private Input(HttpMessage.Input in, String m, String r, String v) {
+			super(in, m, r, v);
+			mInput = in.getInputStream();
+		}
+
+		public InputStream getInputStream() {
+			return mInput;
+		}
+
+		public Const toConst() {
+			validate();
+			return new Const(this);
+		}
+	}
+	
 	private String mVersion;
 	private String mMethod;
 	private String mRequestUri;
@@ -17,15 +70,11 @@ public class HttpRequest extends HttpMessage implements Http.Request
 		mRequestUri = requestUri;
 	}
 	
-	public HttpRequest(Http.Message msg) {
+	private HttpRequest(AbsHttpMessage msg, String method, String requestUri, String version) {
 		super(msg);
-
-		if (! isValid(msg)) throw new RuntimeException("not HttpRequest");
-
-		String [] start = msg.getStartLine().split(" ", 0);
-		mMethod = start[0];
-		mRequestUri = start[1];
-		mVersion = start[2];
+		mVersion = version;
+		mMethod = method;
+		mRequestUri = requestUri;
 	}
 	
 	@Override public String getStartLine() {
@@ -50,23 +99,36 @@ public class HttpRequest extends HttpMessage implements Http.Request
 		}
 	}
 
-	public static boolean isValid(Http.Message msg) {
+	private static String [] isValid(AbsHttpMessage msg) {
 		String [] start = msg.getStartLine().split(" ", 0);
 
-		if (start.length != 3) return false;
+		if (start.length != 3) return null;
 
-		if (! start[2].startsWith("HTTP/")) return false;
+		if (! start[2].startsWith("HTTP/")) return null;
 
-		return true;
+		return start;
 	}
 
-	public static Http.InputRequest parse(InputStream in) throws IOException {
-		final Http.InputMessage msg = Http.readMessage(in);
-		final Http.Request req = new HttpRequest(msg.getMessage());
-		
-		return new Http.InputRequest() {
-			@Override public Http.Request getRequest() { return req; }
-			@Override public InputStream getInputStream() { return msg.getInputStream(); }
-		};
+	public static HttpRequest getByMessage(AbsHttpMessage msg) {
+		String [] s = isValid(msg);
+
+		return s == null ? null: new HttpRequest(msg, s[0], s[1], s[2]);
+	}
+
+	public static Const getByMessage(HttpMessage.Const msg) {
+		String [] s = isValid(msg);
+
+		return s == null ? null: new Const(msg, s[0], s[1], s[2]);
+	}
+
+	public static HttpRequest.Input getByInput(HttpMessage.Input msg) {
+		String [] s = isValid(msg);
+
+		return s == null ? null: new Input(msg, s[0], s[1], s[2]);
+	}
+
+	public static HttpRequest.Input parse(InputStream in) throws IOException {
+		HttpMessage.Input msg = readMessage(in);
+		return getByInput(msg);
 	}
 }

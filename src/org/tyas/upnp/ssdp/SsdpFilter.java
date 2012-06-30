@@ -66,7 +66,7 @@ public abstract class SsdpFilter
 		mMap.clear();
 	}
 
-	protected void performOnAdvertisement(Ssdp.Advertisement adv, InetAddress addr) {
+	protected void performOnAdvertisement(SsdpAdvertisement.Const adv, InetAddress addr) {
 		String nts = adv.getNotificationSubType();
 		UpnpUsn usn = adv.getUniqueServiceName();
 

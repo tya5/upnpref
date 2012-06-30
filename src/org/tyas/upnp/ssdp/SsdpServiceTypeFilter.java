@@ -22,17 +22,17 @@ public class SsdpServiceTypeFilter extends SsdpFilter
 
 	private final SsdpServer.Handler mHandler = new SsdpServer.Handler() {
 
-			@Override public void onAdvertisement(Ssdp.Advertisement adv, SsdpServer.Context ctx) {
+			@Override public void onAdvertisement(SsdpAdvertisement.Const adv, SsdpServer.Context ctx) {
 				UpnpServiceType type = UpnpServiceType.getByUrn(adv.getNotificationType());
 				if (mType.equals(type)) {
 					performOnAdvertisement(adv, ctx.getPacket().getAddress());
 				}
 			}
 
-			@Override public void onSearchRequest(Ssdp.SearchRequest req, SsdpServer.Context ctx) {
+			@Override public void onSearchRequest(SsdpSearchRequest.Const req, SsdpServer.Context ctx) {
 			}
 
-			@Override public void onSearchResponse(Ssdp.SearchResponse resp, SsdpServer.Context ctx) {
+			@Override public void onSearchResponse(SsdpSearchResponse.Const resp, SsdpServer.Context ctx) {
 				UpnpServiceType type = UpnpServiceType.getByUrn(resp.getSearchTarget());
 				if (mType.equals(type)) {
 					performOnFound(resp, ctx.getPacket().getAddress());
