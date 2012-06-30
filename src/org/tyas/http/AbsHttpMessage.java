@@ -46,14 +46,17 @@ public abstract class AbsHttpMessage implements Http.Message
 	}
 	
 	public boolean isKeepAlive() {
-		for (String token: get(Http.CONNECTION)) {
-			String upper = token.toUpperCase();
+		List<String> con = get(Http.CONNECTION);
+		if (con != null) {
+			for (String token: con) {
+				String upper = token.toUpperCase();
 			
-			if (upper.equals(Http.CLOSE))
-				return false;
+				if (upper.equals(Http.CLOSE))
+					return false;
 			
-			if (upper.equals(Http.KEEP_ALIVE)) {
-				return (get(Http.KEEP_ALIVE) != null);
+				if (upper.equals(Http.KEEP_ALIVE)) {
+					return (get(Http.KEEP_ALIVE) != null);
+				}
 			}
 		}
 		return false;
@@ -175,7 +178,7 @@ public abstract class AbsHttpMessage implements Http.Message
 	{
 		String contLen = null;
 		if ((entity != null) && (entity.length > 0)) {
-			contLen = String.format("%x", entity.length);
+			contLen = "" + entity.length;
 		}
 		writeMessageHeaders(out, msg.getStartLine(), msg, null, contLen);
 		if ((entity != null) && (entity.length > 0)) {
