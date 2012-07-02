@@ -3,9 +3,14 @@ package org.tyas.upnp.action;
 import org.tyas.upnp.UpnpServiceType;
 
 import org.w3c.dom.*;
+import org.xml.sax.SAXException;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import java.util.List;
 import java.util.ArrayList;
+import java.io.InputStream;
+import java.io.IOException;
+import java.io.ByteArrayOutputStream;
 
 public class ActionMessage extends AbsActionMessage
 {
@@ -83,25 +88,16 @@ public class ActionMessage extends AbsActionMessage
 		return this;
 	}
 
-	public static ActionMessage.Const getByNode(Node node) {
-		System.out.println("step 1");
-
+	private static ActionMessage.Const getByNode(Node node) {
 		if (node == null) return null;
-
-		System.out.println("step 2");
 
 		if (node.getNodeType() != Node.ELEMENT_NODE) return null;
 
-		System.out.println("step 3");
-
 		ActionMessage.Const c = new ActionMessage.Const();
+
 		c.mServiceType = UpnpServiceType.getByUrn(node.getNamespaceURI());
 
-		System.out.println("step 4");
-
 		if (c.mServiceType == null) return null;
-
-		System.out.println("step 5");
 
 		c.mActionName = ((Element)node).getTagName();
 
@@ -116,13 +112,13 @@ public class ActionMessage extends AbsActionMessage
 		return c;
 	}
 
+	/** @param doc should be namespace aware */
 	public static ActionMessage.Const getByDocument(Document doc) {
-		Node node = doc.getFirstChild();
+		Node node = getChildByTagNameNS(doc, NS_SOAP, "Envelope");
 
-		node = getChildByTagNameNS(node, NS_SOAP, "Envelope");
 		node = getChildByTagNameNS(node, NS_SOAP, "Body");
 
-		for (; node != null; node = node.getNextSibling()) {
+		for (node = node.getFirstChild(); node != null; node = node.getNextSibling()) {
 			if (node.getNodeType() == Node.ELEMENT_NODE) {
 				return getByNode(node);
 			}
@@ -131,28 +127,35 @@ public class ActionMessage extends AbsActionMessage
 		return null;
 	}
 
-	public static Node getChildByTagNameNS(Node node, String ns, String tag) {
-		for (; node != null; node = node.getNextSibling()) {
-
-			System.out.println("step 11");
+	private static Node getChildByTagNameNS(Node node, String ns, String tag) {
+		if (node == null) return null;
+		
+		for (node = node.getFirstChild(); node != null; node = node.getNextSibling()) {
 			
 			if (node.getNodeType() != Node.ELEMENT_NODE) continue;
-			System.out.println("step 12: " + ((Element)node).getTagName());
 
 			if ((ns == null) && (node.getNamespaceURI() != null)) continue;
-			System.out.println("step 13: " + node.getNamespaceURI());
 
 			if ((ns != null) && (! ns.equals(node.getNamespaceURI()))) continue;
-			System.out.println("step 14");
 
-			if (! tag.equals(((Element)node).getTagName())) continue;
-			System.out.println("step 15");
+			if (! tag.equals(node.getLocalName())) continue;
 
 			return node;
 		}
 
-		System.out.println("step 16");
-
 		return null;
+	}
+
+	public static ActionMessage.Const readDocument(InputStream in)
+		throws ParserConfigurationException, SAXException, IOException
+	{
+		DocumentBuilderFactory factory = DocumentBuilderFactory
+			.newInstance();
+		factory.setNamespaceAware(true);
+		Document doc = factory
+			.newDocumentBuilder()
+			.parse(in);
+					
+		return ActionMessage.getByDocument(doc);
 	}
 }

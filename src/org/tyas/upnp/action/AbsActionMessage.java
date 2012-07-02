@@ -1,9 +1,17 @@
 package org.tyas.upnp.action;
 
+import org.tyas.http.*;
 import org.tyas.upnp.UpnpServiceType;
 
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.ByteArrayOutputStream;
 import org.w3c.dom.*;
 import javax.xml.parsers.*;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.TransformerException;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 public abstract class AbsActionMessage
 {
@@ -21,6 +29,7 @@ public abstract class AbsActionMessage
 
 	public abstract  String getArgumentValue(String name);
 
+	/** @param doc should be namespace aware */
 	public Element toElement(Document doc) {
 		Element elm = doc.createElementNS(getServiceType().toString(), getActionName());
 
@@ -38,8 +47,10 @@ public abstract class AbsActionMessage
 	public Document toDocument() {
 		Document doc;
 		try {
-			doc = DocumentBuilderFactory
-				.newInstance()
+			DocumentBuilderFactory factory = DocumentBuilderFactory
+				.newInstance();
+			factory.setNamespaceAware(true);
+			doc = factory
 				.newDocumentBuilder()
 				.getDOMImplementation()
 				.createDocument(NS_SOAP, "s:Envelope", null);
@@ -60,6 +71,15 @@ public abstract class AbsActionMessage
 
 		return doc;
 	}
+
+	public void writeDocument(OutputStream out) throws TransformerException {
+		Document doc = toDocument();
+		
+		TransformerFactory
+			.newInstance()
+			.newTransformer()
+			.transform(new DOMSource(doc), new StreamResult(out));
+	}
 	
 	public static String getStringByNode(Node node) {
 		if (node.getNodeType() != Node.ELEMENT_NODE) return "";
@@ -73,5 +93,27 @@ public abstract class AbsActionMessage
 		String s = c.getNodeValue();
 
 		return s == null ? "": s;
+	}
+
+	public void sendByHttpRequest(String uri, OutputStream out)
+		throws TransformerException, IOException
+	{
+		ByteArrayOutputStream array = new ByteArrayOutputStream();
+
+		writeDocument(array);
+		
+		new HttpRequest("POST", uri, Http.VERSION_1_1)
+			.send(out, array.toByteArray());
+	}
+
+	public void sendByHttpResponse(OutputStream out)
+		throws TransformerException, IOException
+	{
+		ByteArrayOutputStream array = new ByteArrayOutputStream();
+
+		writeDocument(array);
+
+		new HttpResponse(Http.VERSION_1_1, "200", "OK")
+			.send(out, array.toByteArray());
 	}
 }
