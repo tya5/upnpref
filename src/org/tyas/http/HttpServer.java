@@ -6,6 +6,7 @@ import java.net.InetAddress;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.IOException;
+import java.io.ByteArrayOutputStream;
 
 public class HttpServer
 {
@@ -45,22 +46,25 @@ public class HttpServer
 				return sock;
 			}
 			@Override public void run() {
-				InputStream in;
-				HttpRequest.Input req;
-				
 				try {
-					in = sock.getInputStream();
-					
+					HttpRequest.Input req;
+					InputStream in = sock.getInputStream();
+
 					do {
-						req = HttpRequest.parse(in);
-						if (! handler.handleHttpRequest(req, this)) {
-							;
-						}
+						HttpMessage.Input msg = HttpMessage.readMessage(in);
+
+						req = HttpRequest.getByInput(msg);
+
+						if (req == null) break;
+
+						if (handler == null) break;
+
+						handler.handleHttpRequest(req, this);
+						
 					} while (req.isKeepAlive());
 					
 				} catch (IOException e) {
 					e.printStackTrace();
-
 				} finally {
 					try {
 						sock.close();

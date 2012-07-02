@@ -197,6 +197,135 @@ public abstract class HttpMessage extends AbsHttpMessage
 		return this;
 	}
 
+	private static class FixedLengthInputStream extends FilterInputStream
+	{
+		private long ofs = 0;
+		private long length;
+
+		FixedLengthInputStream(InputStream in, long length) {
+			super(in);
+			this.length = length;
+		}
+		
+		@Override public int read() throws IOException {
+			if (ofs >= length) return -1;
+						
+			int b = in.read();
+			if (b < 0) {
+				ofs = length;
+				return -1;
+			}
+
+			ofs++;
+			return b;
+		}
+
+		@Override public int read(byte[] buffer, int offset, int count) throws IOException {
+			if (ofs >= length) return -1;
+
+			long readable = length - ofs;
+
+			if (count > readable) count = (readable <= Integer.MAX_VALUE ? (int)readable: Integer.MAX_VALUE);
+
+			int result = in.read(buffer, offset, count);
+
+			if (result >= 0) ofs += result;
+
+			return result;
+		}
+
+		@Override public boolean markSupported() { return false; }
+
+		@Override public long skip(long byteCount) throws IOException {
+			if (ofs >= length) return 0;
+
+			long skipable = length - ofs;
+
+			if (byteCount > skipable) byteCount = skipable;
+
+			long result = in.skip(byteCount);
+
+			ofs += result;
+
+			return result;
+		}
+	}
+
+	private static class ChunkedInputStream extends FilterInputStream
+	{
+		private int remain = 0;
+
+		ChunkedInputStream(InputStream in) {
+			super(in);
+		}
+		
+		@Override public int read() throws IOException {
+			if (remain < 0) return -1;
+
+			if (remain == 0) {
+				remain = Integer.decode("0x" + readLine(in).trim());
+				if (remain == 0) {
+					remain = -1;
+					return -1;
+				}
+			}
+
+			int b = in.read();
+
+			if (b < 0) {
+				remain = -1;
+				return -1;
+			}
+			
+			remain--;
+			
+			if (remain == 0) readLine(in);
+
+			return b;
+		}
+
+		@Override public int read(byte[] buffer, int offset, int count) throws IOException {
+			if (remain < 0) return -1;
+
+			if (remain == 0) {
+				remain = Integer.decode("0x" + readLine(in).trim());
+				if (remain == 0) {
+					remain = -1;
+					return -1;
+				}
+			}
+			
+			int result = in.read(buffer, offset, remain < count ? remain: count);
+
+			if (result >= 0) remain -= result;
+
+			if (remain == 0) readLine(in);
+
+			return result;
+		}
+
+		@Override public boolean markSupported() { return false; }
+
+		@Override public long skip(long byteCount) throws IOException {
+			if (remain < 0) return 0;
+
+			if (remain == 0) {
+				remain = Integer.decode("0x" + readLine(in).trim());
+				if (remain == 0) {
+					remain = -1;
+					return 0;
+				}
+			}
+			
+			long result = in.skip(remain < byteCount ? remain: byteCount);
+
+			if (result >= 0) remain -= (int)result;
+
+			if (remain == 0) readLine(in);
+
+			return result;
+		}
+	}
 
 	/**
 	 * Make entity body stream for input.
@@ -226,45 +355,10 @@ public abstract class HttpMessage extends AbsHttpMessage
 		}
 
 		if (msg.isChunkedEncoding()) {
-			inp.mInput = new FilterInputStream(in) {
-					int remain = 0;
-					@Override public int read() throws IOException {
-						if (remain < 0) {
-							return -1;
-						}
-						if (remain == 0) {
-							remain = Integer.decode("0x" + readLine(in).trim());
-						}
-						int b = in.read();
-						remain--;
-						if (remain == 0) {
-							readLine(in);
-						}
-						return b;
-					}
-				};
+			inp.mInput = new ChunkedInputStream(in);
 		} else {
 			long tmp = msg.getContentLength();
-			if (tmp >= Integer.MAX_VALUE) throw new IOException();
-			final int contentSize = (int)tmp;
-
-			inp.mInput = (contentSize <= 0) ? null: new FilterInputStream(in) {
-					int ofs = 0;
-					@Override public int read() throws IOException {
-						if (ofs >= contentSize) {
-							return -1;
-						}
-						
-						int b = in.read();
-						if (b < 0) {
-							ofs = contentSize;
-							return -1;
-						}
-
-						ofs++;
-						return b;
-					}
-				};
+			inp.mInput = (tmp <= 0) ? null: new FixedLengthInputStream(in, tmp);
 		}
 
 		return inp;

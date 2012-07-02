@@ -18,15 +18,20 @@ public class Main
 			System.out.println("Client: connect and request to server");
 			Socket client = new Socket("localhost", 8080);
 			new HttpRequest("GET", "/", Http.VERSION_1_1)
-				.send(client.getOutputStream());
+				.send(client.getOutputStream(), "Hello Client!".getBytes());
 
 			System.out.println("Server: accept request");
 			new HttpServer() {
 				@Override protected boolean handleHttpRequest(HttpRequest.Input req, HttpServer.Context ctx) {
 					try {
+						ByteArrayOutputStream ba = new ByteArrayOutputStream();
+						int d;
+						while ((d = req.getInputStream().read()) >= 0) ba.write(d);
+						System.out.println("Server: accept text: " + ba.toString());
+
 						System.out.println("Server: send response");
 
-						String data = "Hello World!";
+						String data = "Hello Server!";
 						
 						new HttpResponse(Http.VERSION_1_1, "200", "OK")
 							.send(ctx.getClient().getOutputStream(), data.getBytes());
