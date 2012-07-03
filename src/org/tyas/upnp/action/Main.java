@@ -33,12 +33,10 @@ public class Main
 		ServerSocket server = new ServerSocket(8080);
 
 		System.out.println("Client: send action request");
-		Socket client = new Socket("localhost", 8080);
-
-		new ActionMessage(new UpnpServiceType("Browser", "1"), "Browse")
+		InputStream client = new ActionMessage(new UpnpServiceType("Browser", "1"), "Browse")
 			.add("in1", "222")
 			.add("in2", "123")
-			.sendByHttpRequest("/", client.getOutputStream());
+			.sendByHttpRequest("localhost", 8080, "/");
 
 		System.out.println("Server: accept");
 		new HttpServer() {
@@ -63,7 +61,7 @@ public class Main
 		}.accept(server).run();
 
 		System.out.println("Client: accept action response");
-		HttpMessage.Input inp = HttpMessage.readMessage(client.getInputStream());
+		HttpMessage.Input inp = HttpMessage.readMessage(client);
 		HttpResponse.Input respinp = HttpResponse.getByInput(inp);
 		ActionMessage.Const resp = ActionMessage.readDocument(inp.getInputStream());
 	}

@@ -4,8 +4,10 @@ import org.tyas.http.*;
 import org.tyas.upnp.UpnpServiceType;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.ByteArrayOutputStream;
+import java.net.Socket;
 import org.w3c.dom.*;
 import javax.xml.parsers.*;
 import javax.xml.transform.TransformerFactory;
@@ -107,6 +109,29 @@ public abstract class AbsActionMessage
 		new HttpRequest("POST", uri, Http.VERSION_1_1)
 			.putFirst(SOAPACTION, "\"" + getServiceType() + "#" + getActionName() + "\"")
 			.send(out, array.toByteArray());
+	}
+
+	public void sendByHttpRequest(String uri, Socket sock)
+		throws TransformerException, IOException
+	{
+		ByteArrayOutputStream array = new ByteArrayOutputStream();
+
+		writeDocument(array);
+		
+		new HttpRequest("POST", uri, Http.VERSION_1_1)
+			.setHost(sock.getInetAddress().getHostAddress(), sock.getPort())
+			.putFirst(SOAPACTION, "\"" + getServiceType() + "#" + getActionName() + "\"")
+			.send(sock.getOutputStream(), array.toByteArray());
+	}
+
+	public InputStream sendByHttpRequest(String host, int port, String uri)
+		throws IOException, TransformerException
+	{
+		Socket sock = new Socket(host, port);
+
+		sendByHttpRequest(uri, sock);
+
+		return sock.getInputStream();
 	}
 
 	public void sendByHttpResponse(OutputStream out)
