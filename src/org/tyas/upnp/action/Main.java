@@ -46,6 +46,7 @@ public class Main
 				try {
 					System.out.println("Server: accept action request");
 					ActionMessage.Const reqact = ActionMessage.readDocument(req.getInputStream());
+					System.out.println("Server: accept " + req.getFirst(ActionMessage.SOAPACTION));
 
 					System.out.println("Server: send action response");
 					new ActionMessage(reqact.getServiceType(), reqact.getActionName() + "Response")

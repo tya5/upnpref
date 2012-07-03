@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.io.InputStream;
 import java.io.IOException;
 import java.io.ByteArrayOutputStream;
+import java.io.ByteArrayInputStream;
 
 public class ActionMessage extends AbsActionMessage
 {
@@ -149,12 +150,20 @@ public class ActionMessage extends AbsActionMessage
 	public static ActionMessage.Const readDocument(InputStream in)
 		throws ParserConfigurationException, SAXException, IOException
 	{
+		ByteArrayOutputStream arrayout = new ByteArrayOutputStream();
+		int data;
+
+		while ((data = in.read()) >= 0) arrayout.write(data);
+
+		ByteArrayInputStream arrayin = new ByteArrayInputStream(arrayout.toByteArray());
+
 		DocumentBuilderFactory factory = DocumentBuilderFactory
 			.newInstance();
 		factory.setNamespaceAware(true);
+		
 		Document doc = factory
 			.newDocumentBuilder()
-			.parse(in);
+			.parse(arrayin);
 					
 		return ActionMessage.getByDocument(doc);
 	}

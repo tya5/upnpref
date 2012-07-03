@@ -135,18 +135,18 @@ public abstract class HttpMessage extends AbsHttpMessage
 		list.add(value);
 	}
 
-	public boolean put(String name, String value) {
-		if (! isReserved(name)) return false;
+	public HttpMessage put(String name, String value) {
+		if (! isReserved(name)) return null;
 		
 		putImpl(name, value);
-		return true;
+		return this;
 	}
 
-	public boolean putFirst(String name, String value) {
-		if (! isReserved(name)) return false;
+	public HttpMessage putFirst(String name, String value) {
+		if (! isReserved(name)) return null;
 
 		putFirstImpl(name, value);
-		return true;
+		return this;
 	}
 
 	public HttpMessage setInt(String name, int value) {

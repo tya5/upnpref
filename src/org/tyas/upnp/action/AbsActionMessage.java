@@ -15,6 +15,8 @@ import javax.xml.transform.stream.StreamResult;
 
 public abstract class AbsActionMessage
 {
+	public static final String SOAPACTION = "SOAPACTION";
+
 	public static final String NS_SOAP = "http://schemas.xmlsoap.org/soap/envelope/";
 
 	public abstract UpnpServiceType getServiceType();
@@ -103,6 +105,7 @@ public abstract class AbsActionMessage
 		writeDocument(array);
 		
 		new HttpRequest("POST", uri, Http.VERSION_1_1)
+			.putFirst(SOAPACTION, "\"" + getServiceType() + "#" + getActionName() + "\"")
 			.send(out, array.toByteArray());
 	}
 
