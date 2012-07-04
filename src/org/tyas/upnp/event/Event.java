@@ -20,6 +20,14 @@ public class Event
 		boolean isUnsubscribeRequest();
 	}
 
+	public interface EventMessage extends Http.Request
+	{
+		SubscribeId getSid();
+		int getEventKey();
+		Set<String> getVariableNameSet();
+		String getProperty(String variableName);
+	}
+
 	public static int unpackTimeout(String timeout) {
 		String pfx = "Second-";
 		int idx = timeout.indexOf(pfx);
