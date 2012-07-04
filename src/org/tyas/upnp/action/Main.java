@@ -33,7 +33,7 @@ public class Main
 		ServerSocket server = new ServerSocket(8080);
 
 		System.out.println("Client: send action request");
-		InputStream client = new ActionMessage(new UpnpServiceType("Browser", "1"), "Browse")
+		InputStream client = new ActionMessage(new UpnpServiceType("ContentDirectory", "1"), "Browse")
 			.add("in1", "222")
 			.add("in2", "123")
 			.sendByHttpRequest("localhost", 8080, "/");

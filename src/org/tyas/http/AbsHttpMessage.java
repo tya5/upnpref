@@ -15,6 +15,7 @@ import java.io.FilterOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.net.URI;
 import java.net.URL;
+import java.net.DatagramPacket;
 
 public abstract class AbsHttpMessage implements Http.Message
 {
@@ -252,5 +253,12 @@ public abstract class AbsHttpMessage implements Http.Message
 		}
 
 		return out;
+	}
+
+	public DatagramPacket toDatagramPacket() throws IOException {
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		send(out);
+		byte [] data = out.toByteArray();
+		return new DatagramPacket(data, data.length);
 	}
 }

@@ -22,10 +22,6 @@ public class SsdpSearchRequest extends HttpRequest implements Ssdp.SearchRequest
 		@Override public String getSearchTarget() { return getFirst(Ssdp.ST); }
 
 		@Override public String getMan() { return getFirst(Ssdp.MAN); }
-
-		@Override public DatagramPacket toDatagramPacket() throws IOException {
-			return Ssdp.toDatagramPacket(this);
-		}
 	}
 
 	public SsdpSearchRequest() {
@@ -37,10 +33,6 @@ public class SsdpSearchRequest extends HttpRequest implements Ssdp.SearchRequest
 	@Override public String getSearchTarget() { return getFirst(Ssdp.ST); }
 
 	@Override public String getMan() { return getFirst(Ssdp.MAN); }
-
-	@Override public DatagramPacket toDatagramPacket() throws IOException {
-		return Ssdp.toDatagramPacket(this);
-	}
 
 	public SsdpSearchRequest setMaxWaitTime(int seconds) {
 		setInt(Ssdp.MX, seconds);

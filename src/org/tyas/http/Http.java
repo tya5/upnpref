@@ -15,6 +15,7 @@ import java.io.FilterOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.net.URI;
 import java.net.URL;
+import java.net.DatagramPacket;
 
 public class Http
 {
@@ -56,6 +57,7 @@ public class Http
 		void send(OutputStream out, byte [] entity) throws IOException;
 		void send(OutputStream out, InputStream in) throws IOException;
 		void send(OutputStream out, File f) throws IOException;
+		DatagramPacket toDatagramPacket() throws IOException;
 	}
 
 	public interface Request extends Message

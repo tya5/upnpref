@@ -50,7 +50,6 @@ public class Ssdp
 		String getHost();
 		String getNotificationType();
 		String getNotificationSubType();
-		DatagramPacket toDatagramPacket() throws IOException;
 	}
 
 	public interface SearchRequest extends Http.Request
@@ -59,20 +58,11 @@ public class Ssdp
 		int getMaxWaitTime();
 		String getSearchTarget();
 		String getMan();
-		DatagramPacket toDatagramPacket() throws IOException;
 	}
 
 	public interface SearchResponse extends RemoteDevicePointer, Http.Response
 	{
 		//Date getDate();
 		String getSearchTarget();
-		DatagramPacket toDatagramPacket() throws IOException;
-	}
-
-	public static DatagramPacket toDatagramPacket(Http.Message msg) throws IOException {
-		ByteArrayOutputStream out = new ByteArrayOutputStream();
-		msg.send(out);
-		byte [] data = out.toByteArray();
-		return new DatagramPacket(data, data.length);
 	}
 }

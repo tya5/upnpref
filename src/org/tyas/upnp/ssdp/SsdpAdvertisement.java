@@ -39,10 +39,6 @@ public class SsdpAdvertisement extends HttpRequest implements Ssdp.Advertisement
 		@Override public int getConfigId() { return getInt(Ssdp.CONFIGID, 0); }
 	
 		@Override public int getSearchPort() { return getInt(Ssdp.SEARCHPORT, -1); }
-
-		@Override public DatagramPacket toDatagramPacket() throws IOException {
-			return Ssdp.toDatagramPacket(this);
-		}
 	}
 
 	public SsdpAdvertisement() {
@@ -68,10 +64,6 @@ public class SsdpAdvertisement extends HttpRequest implements Ssdp.Advertisement
 	@Override public int getConfigId() { return getInt(Ssdp.CONFIGID, 0); }
 	
 	@Override public int getSearchPort() { return getInt(Ssdp.SEARCHPORT, -1); }
-
-	@Override public DatagramPacket toDatagramPacket() throws IOException {
-		return Ssdp.toDatagramPacket(this);
-	}
 
 	public SsdpAdvertisement setDescriptionUrl(String url) {
 		setLocation(url);
