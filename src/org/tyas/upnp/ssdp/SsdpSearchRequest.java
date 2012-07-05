@@ -9,10 +9,8 @@ import java.io.OutputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
 
-public class SsdpSearchRequest
+public abstract class SsdpSearchRequest
 {
-	private SsdpSearchRequest() {}
-
 	public interface Base extends HttpRequest.Base
 	{
 		int getMaxWaitTime();

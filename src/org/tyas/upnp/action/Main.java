@@ -32,7 +32,7 @@ public class Main
 		ServerSocket server = new ServerSocket(8080);
 
 		System.out.println("Client: send action request");
-		InputStream client = new ActionMessage(new UpnpServiceType("ContentDirectory", "1"), "Browse")
+		InputStream client = new ActionMessage.Builder(new UpnpServiceType("ContentDirectory", "1"), "Browse")
 			.add("in1", "222")
 			.add("in2", "123")
 			.sendByHttpRequest("localhost", 8080, "/");
@@ -46,7 +46,7 @@ public class Main
 					System.out.println("Server: accept " + req.getFirst(ActionMessage.SOAPACTION));
 
 					System.out.println("Server: send action response");
-					new ActionMessage(reqact.getServiceType(), reqact.getActionName() + "Response")
+					new ActionMessage.Builder(reqact.getServiceType(), reqact.getActionName() + "Response")
 						.add("out1", "hello")
 						.add("out2", "world")
 						.sendByHttpResponse(ctx.getClient().getOutputStream());

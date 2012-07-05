@@ -12,10 +12,8 @@ import java.net.URI;
 import java.net.URL;
 import java.net.DatagramPacket;
 
-public class SsdpAdvertisement
+public abstract class SsdpAdvertisement
 {
-	private SsdpAdvertisement() {}
-
 	public interface Base extends Ssdp.RemoteDevicePointer, HttpRequest.Base
 	{
 		String getNotificationType();

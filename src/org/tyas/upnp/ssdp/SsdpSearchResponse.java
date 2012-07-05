@@ -12,10 +12,8 @@ import java.net.URI;
 import java.net.URL;
 import java.net.DatagramPacket;
 
-public class SsdpSearchResponse
+public abstract class SsdpSearchResponse
 {
-	private SsdpSearchResponse() {}
-
 	public interface Base extends Ssdp.RemoteDevicePointer, HttpResponse.Base
 	{
 		//Date getDate();
