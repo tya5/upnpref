@@ -1,41 +1,55 @@
 package org.tyas.upnp.event;
 
-public class SubscribeRequest extends HttpRequest implements Event.SubscribeRequest
+import org.tyas.http.HttpMessage;
+import org.tyas.http.HttpRequest;
+
+public abstract class SubscribeRequest
 {
-	public static class Const extends HttpRequest.Const implements Event.SubscribeRequest
+	public static final String SUBSCRIBE = "SUBSCRIBE";
+	public static final String UNSUBSCRIBE = "UNSUBSCRIBE";
+	public static final String CALLBACK = "CALLBACK";
+	public static final String TIMEOUT = "TIMEOUT";
+	public static final String NT = "NT";
+	public static final String SID = "SID";
+	public static final String UPNP_EVENT = "upnp:event";
+
+	public interface Base extends HttpRequest.Base
+	{
+		String getCallback();
+		int getTimeout();
+		SubscribeId getSid();
+		boolean isSubscribeRequest();
+		boolean isRenewRequest();
+		boolean isUnsubscribeRequest();
+	}
+
+	public static class Const extends HttpRequest.Const implements Base
 	{
 		private Const(HttpRequest.Const c) {
 			super(c);
 		}
 
-		@Override public String getCallback() { return getFirst(Event.CALLBACK); }
-
-		@Override public int getTimeout() { return Event.unpackTimeout(getFirst(Event.TIMEOUT, 0)); }
-
-		@Override public SubscribeId getSid() { return SubscribeId.getBySid(getFirst(Event.SID)); }
-
-		@Override public boolean isSubscribeRequest() { return isSubscribeRequest(this); }
-
-		@Override public boolean isRenewRequest() { return isRenewRequest(this); }
-
-		@Override public boolean isUnsubscribeRequest() { return isUnsubscribeRequest(this); }
+		@Override public String getCallback() { return getFirst(CALLBACK); }
+		@Override public int getTimeout() { return unpackTimeout(getFirst(TIMEOUT)); }
+		@Override public SubscribeId getSid() { return SubscribeId.getBySid(getFirst(SID)); }
+		@Override public boolean isSubscribeRequest() { return SubscribeRequest.isSubscribeRequest(this); }
+		@Override public boolean isRenewRequest() { return SubscribeRequest.isRenewRequest(this); }
+		@Override public boolean isUnsubscribeRequest() { return SubscribeRequest.isUnsubscribeRequest(this); }
 	}
 
-	private SubscribeRequest(String method, String uri) {
-		super(method, uri, Http.VERSION_1_1);
+	public static class Builder extends HttpRequest.Builder implements Base
+	{
+		private Builder(String method, String uri) {
+			super(method, uri, HttpMessage.VERSION_1_1);
+		}
+
+		@Override public String getCallback() { return getFirst(CALLBACK); }
+		@Override public int getTimeout() { return unpackTimeout(getFirst(TIMEOUT)); }
+		@Override public SubscribeId getSid() { return SubscribeId.getBySid(getFirst(SID)); }
+		@Override public boolean isSubscribeRequest() { return SubscribeRequest.isSubscribeRequest(this); }
+		@Override public boolean isRenewRequest() { return SubscribeRequest.isRenewRequest(this); }
+		@Override public boolean isUnsubscribeRequest() { return SubscribeRequest.isUnsubscribeRequest(this); }
 	}
-
-	@Override public String getCallback() { return getFirst(Event.CALLBACK); }
-
-	@Override public int getTimeout() { return Event.unpackTimeout(getFirst(Event.TIMEOUT, 0)); }
-
-	@Override public SubscribeId getSid() { return SubscribeId.getBySid(getFirst(Event.SID)); }
-
-	@Override public boolean isSubscribeRequest() { return isSubscribeRequest(this); }
-
-	@Override public boolean isRenewRequest() { return isRenewRequest(this); }
-
-	@Override public boolean isUnsubscribeRequest() { return isUnsubscribeRequest(this); }
 
 	public static SubscribeRequest.Const getByHttpRequest(HttpRequest.Const req) {
 		if (isSubscribeRequest(req)) return new Const(req);
@@ -47,49 +61,59 @@ public class SubscribeRequest extends HttpRequest implements Event.SubscribeRequ
 		return null;
 	}
 
-	public static boolean isSubscribeRequest(Http.Request req) {
+	public static boolean isSubscribeRequest(HttpRequest.Base req) {
 		return
-			Event.SUBSCRIBE.equals(req.getMethod()) &&
-			req.keySet().contains(Event.CALLBACK) &&
-			req.keySet().contains(Event.TIMEOUT);
+			SUBSCRIBE.equals(req.getMethod()) &&
+			req.keySet().contains(CALLBACK) &&
+			req.keySet().contains(TIMEOUT);
 	}
 
-	public static boolean isRenewRequest(Http.Request req) {
+	public static boolean isRenewRequest(HttpRequest.Base req) {
 		return
-			Event.SUBSCRIBE.equals(req.getMethod()) &&
-			req.keySet().contains(Event.SID) &&
-			req.keySet().contains(Event.TIMEOUT);
+			SUBSCRIBE.equals(req.getMethod()) &&
+			req.keySet().contains(SID) &&
+			req.keySet().contains(TIMEOUT);
 	}
 
-	public static boolean isUnsubscribeRequest(Http.Request req) {
+	public static boolean isUnsubscribeRequest(HttpRequest.Base req) {
 		return
-			Event.UNSUBSCRIBE.equals(req.getMethod()) &&
-			req.keySet().contains(Event.SID);
+			UNSUBSCRIBE.equals(req.getMethod()) &&
+			req.keySet().contains(SID);
 	}
 
-	public static SubscribeRequest getSubscribeRequest(String uri, String callback, int timeout) {
-		SubscribeRequest req = new SubscribeRequest(Event.SUBSCRIBE, uri);
+	public static Builder getSubscribeRequest(String uri, String callback, int timeout) {
+		Builder req = new Builder(SUBSCRIBE, uri);
 
-		req.putFirst(Event.CALLBACK, callback);
-		req.putFirst(Event.TIMEOUT, Event.packTimeout(timeout));
+		req.putFirst(CALLBACK, callback);
+		req.putFirst(TIMEOUT, packTimeout(timeout));
 
 		return req;
 	}
 
-	public static SubscribeRequest getRenewRequest(String uri, SubscribeId sid, int timeout) {
-		SubscribeRequest req = new SubscribeRequest(Event.SUBSCRIBE, uri);
+	public static Builder getRenewRequest(String uri, SubscribeId sid, int timeout) {
+		Builder req = new Builder(SUBSCRIBE, uri);
 
-		req.putFirst(Event.SID, sid.toString());
-		req.putFirst(Event.TIMEOUT, Event.packTimeout(timeout));
+		req.putFirst(SID, sid.toString());
+		req.putFirst(TIMEOUT, packTimeout(timeout));
 
 		return req;
 	}
 
-	public static SubscribeRequest getUnsubscribeRequest(String uri, SubscribeId sid) {
-		SubscribeRequest req = new SubscribeRequest(Event.UNSUBSCRIBE, uri);
+	public static Builder getUnsubscribeRequest(String uri, SubscribeId sid) {
+		Builder req = new Builder(UNSUBSCRIBE, uri);
 
-		req.putFirst(Event.SID, sid.toString());
+		req.putFirst(SID, sid.toString());
 
 		return req;
+	}
+
+	public static int unpackTimeout(String timeout) {
+		String pfx = "Second-";
+		int idx = timeout.indexOf(pfx);
+		return Integer.decode(timeout.substring(pfx.length()));
+	}
+
+	public static String packTimeout(int timeout) {
+		return "Second-" + timeout;
 	}
 }

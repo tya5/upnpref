@@ -1,44 +1,62 @@
 package org.tyas.upnp.event;
 
-public class EventMessage extends HttpRequest implements Event.EventMessage
+import org.tyas.http.HttpRequest;
+import java.util.*;
+
+public abstract class EventMessage
 {
+	public static final String SID = "SID";
+	public static final String SEQ = "SEQ";
+
+	private PropertySet mPropertySet = new PropertySet();
+
+	public Set<String> getVariableNameSet() { return mPropertySet.keySet(); }
+
+	public String getProperty(String variableName) { return mPropertySet.get(variableName); }
+
+
+	public interface Base extends HttpRequest.Base
+	{
+		SubscribeId getSid();
+		int getEventKey();
+		Set<String> getVariableNameSet();
+		String getProperty(String variableName);
+	}
+
 	private static class PropertySet extends HashMap<String,String>
 	{
 	}
 
-	public static class Const extends HttpRequest.Const implements Event.EventMessage
+	public static class Const extends HttpRequest.Const implements Base
 	{
-		private PropertySet mPropertySet = new PropertySet();
-	
-		@Override public Set<String> getVariableNameSet() { return mPropertySet.keySet(); }
+		private EventMessage mEv;
 
-		@Override public String getProperty(String variableName) { return mPropertySet.get(variableName); }
-
-		@Override public SubscribeId getSid() { return SubscribeId.getBySid(getFirst(Event.SID)); }
-
-		@Override public int getEventKey() { return getInt(Event.SEQ, -1); }
+		@Override public Set<String> getVariableNameSet() { return mEv.getVariableNameSet(); }
+		@Override public String getProperty(String variableName) { return mEv.getProperty(variableName); }
+		@Override public SubscribeId getSid() { return SubscribeId.getBySid(getFirst(SID)); }
+		@Override public int getEventKey() { return getInt(SEQ, -1); }
 	}
 
-	private PropertySet mPropertySet = new PropertySet();
-	
-	@Override public Set<String> getVariableNameSet() { return mPropertySet.keySet(); }
+	public static class Builder extends HttpRequest.Builder implements Base
+	{
+		private EventMessage mEv;
 
-	@Override public String getProperty(String variableName) { return mPropertySet.get(variableName); }
+		@Override public Set<String> getVariableNameSet() { return mEv.getVariableNameSet(); }
+		@Override public String getProperty(String variableName) { return mEv.getProperty(variableName); }
+		@Override public SubscribeId getSid() { return SubscribeId.getBySid(getFirst(SID)); }
+		@Override public int getEventKey() { return getInt(SEQ, -1); }
 
-	@Override public SubscribeId getSid() { return SubscribeId.getBySid(getFirst(Event.SID)); }
+		public EventMessage.Builder setSid(SubscribeId sid) {
+			putFirst(SID, sid.toString()); return this;
+		}
 
-	@Override public int getEventKey() { return getInt(Event.SEQ, -1); }
+		public EventMessage.Builder setEventKey(int key) {
+			putFirst(SEQ, "" + key); return this;
+		}
 
-	public EventMessage setSid(SubscribeId sid) {
-		putFirst(Event.SID, sid.toString()); return this;
-	}
-
-	public EventMessage setEventKey(int key) {
-		putFirst(Event.SEQ, "" + key); return this;
-	}
-
-	public EventMessage putProperty(String variableName, String value) {
-		mPropertySet.put(variableName, value); return this;
+		public EventMessage.Builder putProperty(String variableName, String value) {
+			mEv.mPropertySet.put(variableName, value); return this;
+		}
 	}
 
 	public static EventMessage.Const getByHttpRequest(HttpRequest.Input req) {
