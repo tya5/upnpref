@@ -2,8 +2,8 @@ package org.tyas.upnp.event;
 
 public class Event
 {
-	public static final String SUBSCRIBE - "SUBSCRIBE";
-	public static final String SUBSCRIBE - "UNSUBSCRIBE";
+	public static final String SUBSCRIBE = "SUBSCRIBE";
+	public static final String SUBSCRIBE = "UNSUBSCRIBE";
 	public static final String CALLBACK = "CALLBACK";
 	public static final String TIMEOUT = "TIMEOUT";
 	public static final String NT = "NT";

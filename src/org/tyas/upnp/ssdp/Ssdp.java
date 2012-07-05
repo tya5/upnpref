@@ -5,7 +5,6 @@ import java.net.DatagramPacket;
 import java.io.IOException;
 import java.io.ByteArrayOutputStream;
 
-import org.tyas.http.Http;
 import org.tyas.upnp.UpnpUsn;
 
 public class Ssdp
@@ -43,26 +42,5 @@ public class Ssdp
 		int getConfigId();
 		int getSearchPort();
 		//String getServerName();
-	}
-
-	public interface Advertisement extends RemoteDevicePointer, Http.Request
-	{
-		String getHost();
-		String getNotificationType();
-		String getNotificationSubType();
-	}
-
-	public interface SearchRequest extends Http.Request
-	{
-		String getHost();
-		int getMaxWaitTime();
-		String getSearchTarget();
-		String getMan();
-	}
-
-	public interface SearchResponse extends RemoteDevicePointer, Http.Response
-	{
-		//Date getDate();
-		String getSearchTarget();
 	}
 }

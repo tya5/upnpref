@@ -9,97 +9,70 @@ import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.IOException;
+import java.io.FileInputStream;
 import java.io.FilterInputStream;
+import java.io.FilterOutputStream;
 import java.io.ByteArrayOutputStream;
 import java.net.URI;
 import java.net.URL;
+import java.net.DatagramPacket;
 
-public abstract class HttpMessage extends AbsHttpMessage
+public abstract class HttpMessage
 {
-	public static abstract class Const extends AbsHttpMessage
-	{
-		private Map<String,List<String>> mMap;
+	public static final char LF = '\n';
+	public static final char CR = '\r';
+	public static final String CRLF = "\r\n";
 
-		private Const() {
-			mMap = new HashMap<String,List<String>>();
-		}
+	public static final String VERSION_1_0 = "HTTP/1.0";
+	public static final String VERSION_1_1 = "HTTP/1.1";
 
-		public Const(AbsHttpMessage msg) {
-			this();
-
-			for (String key: msg.keySet()) {
-				mMap.put(key, new ArrayList<String>(msg.get(key)));
-			}
-		}
-
-		public Const(Const c) {
-			mMap = c.mMap;
-		}
-
-		@Override public Set<String> keySet() {
-			return mMap.keySet();
-		}
-
-		@Override public List<String> get(String name) {
-			return mMap.get(name);
-		}
-	}
-
-	public static abstract class Input extends Const
-	{
-		private InputStream mInput;
-
-		public InputStream getInputStream() {
-			return mInput;
-		}
-
-		public Const toConst() {
-			final String start = getStartLine();
-			
-			return new Const(this) {
-				@Override public String getStartLine() { return start; }
-			};
-		}
-	}
-
-	private Map<String,List<String>> mMap = new HashMap<String,List<String>>();
+	public static final String HOST = "HOST";
+	public static final String LOCATION = "LOCATION";
+	public static final String TRANSFER_ENCODING = "TRANSFER-ENCODING";
+	public static final String CONTENT_LENGTH = "CONTENT-LENGTH";
+	public static final String SERVER = "SERVER";
+	public static final String CACHE_CONTROL = "CACHE-CONTROL";
+	public static final String CONNECTION = "CONNECTION";
+	public static final String KEEP_ALIVE = "KEEP-ALIVE";
+	public static final String CLOSE = "CLOSE";
+	public static final String CHUNKED = "chunked";
+	public static final String MAX_AGE = "max-age";
 
 	private static final String [] mReservedTab = new String [] {
-		Http.HOST,
-		Http.LOCATION,
-		Http.TRANSFER_ENCODING,
-		Http.CONTENT_LENGTH,
-		Http.SERVER,
-		Http.CACHE_CONTROL,
-		Http.CONNECTION,
-		Http.KEEP_ALIVE,
+		HOST,
+		LOCATION,
+		TRANSFER_ENCODING,
+		CONTENT_LENGTH,
+		SERVER,
+		CACHE_CONTROL,
+		CONNECTION,
+		KEEP_ALIVE,
 	};
 
-	public HttpMessage() {}
+	private Map<String,List<String>> mMap;
 
-	public HttpMessage(AbsHttpMessage msg) {
+	public HttpMessage() {
+		mMap = new HashMap<String,List<String>>();
+	}
+
+	public HttpMessage(Map<String,List<String>> map) {
+		mMap = map;
+	}
+
+	public HttpMessage(HttpMessage msg) {
+		this();
 		for (String key: msg.keySet()) {
 			mMap.put(key, new ArrayList<String>(msg.get(key)));
 		}
 	}
 
-	@Override public Set<String> keySet() {
-		return mMap.keySet();
-	}
+	public abstract String getStartLine();
 
-	@Override public List<String> get(String name) {
-		return mMap.get(name);
-	}
+	public Set<String> keySet() { return mMap.keySet(); }
 
-	public Const toConst() {
-		final String start = getStartLine();
-		
-		return new Const(this) {
-			@Override public String getStartLine() { return start; }
-		};
-	}
+	public List<String> get(String name) { return mMap.get(name); }
 
-	private boolean isReserved(String name) {
+	public boolean isReserved(String name) {
 		name = name == null ? null : name.toUpperCase();
 
 		for (String mask: mReservedTab) {
@@ -110,91 +83,357 @@ public abstract class HttpMessage extends AbsHttpMessage
 
 		return true;
 	}
-		
-	private void putImpl(String name, String value) {
+
+	public String getFirst(String name) {
 		List<String> list = get(name);
+		return list == null || list.size() == 0 ? null: list.get(0);
+	}
 
-		if (list == null) {
-			list = new ArrayList<String>();
-			mMap.put(name, list);
+	public int getInt(String name, int defaultValue) {
+		try {
+			return Integer.decode(getFirst(name));
+		} catch (Exception e) {
+			return defaultValue;
 		}
-
-		list.add(value);
 	}
 
-	private void putFirstImpl(String name, String value) {
-		List<String> list = get(name);
-
-		if (list == null) {
-			list = new ArrayList<String>();
-			mMap.put(name, list);
-		} else {
-			list.clear();
+	public long getLong(String name, long defaultValue) {
+		try {
+			return Long.decode(getFirst(name));
+		} catch (Exception e) {
+			return defaultValue;
 		}
-
-		list.add(value);
 	}
-
-	public HttpMessage put(String name, String value) {
-		if (! isReserved(name)) return null;
-		
-		putImpl(name, value);
-		return this;
-	}
-
-	public HttpMessage putFirst(String name, String value) {
-		if (! isReserved(name)) return null;
-
-		putFirstImpl(name, value);
-		return this;
-	}
-
-	public HttpMessage setInt(String name, int value) {
-		putFirst(name, "" + value); return this;
-	}
-
-	public HttpMessage remove(String name) {
-		mMap.remove(name); return this;
-	}
-
-	public HttpMessage setHost(String host, int port) {
-		if (port < 0) {
-			setHost(host);
-		} else {
-			putFirstImpl(Http.HOST, host + ":" + port);
-		}
-		return this;
-	}
-
-	public HttpMessage setHost(String host) {
-		putFirstImpl(Http.HOST, host); return this;
-	}
-
-	public HttpMessage setLocation(String uri) {
-		putFirstImpl(Http.LOCATION, uri); return this;
-	}
-
-	public HttpMessage setLocation(URI uri) {
-		setLocation(uri.toString()); return this;
-	}
-
-	public HttpMessage putServerToken(String product) {
-		putImpl(Http.SERVER, product); return this;
-	}
-
-	public HttpMessage setMaxAge(long max) {
-		List<String> list = get(Http.CACHE_CONTROL);
-
-		if (list != null) {
-			for (String item: list) {
-				int idx = item.indexOf(Http.MAX_AGE);
-				if (idx >= 0) {
-					list.remove(item);
+	
+	public boolean isKeepAlive() {
+		List<String> con = get(CONNECTION);
+		if (con != null) {
+			for (String token: con) {
+				String upper = token.toUpperCase();
+			
+				if (upper.equals(CLOSE))
+					return false;
+			
+				if (upper.equals(KEEP_ALIVE)) {
+					return (get(KEEP_ALIVE) != null);
 				}
 			}
 		}
-		put(Http.CACHE_CONTROL, Http.MAX_AGE + "=" + max);
-		return this;
+		return false;
+	}
+
+	public boolean isChunkedEncoding() {
+		String te = getFirst(TRANSFER_ENCODING);
+		return (te != null) && CHUNKED.equals(te.toUpperCase());
+	}
+
+	public long getContentLength() {
+		String cl = getFirst(CONTENT_LENGTH);
+		return cl == null ? -1: Long.decode(cl);
+	}
+
+	public String getHost() {
+		String host = getFirst(HOST);
+
+		if (host == null) return null;
+
+		try {
+			return host.split(":")[0];
+		} catch (Exception e) {
+			return "";
+		}
+	}
+
+	public int getPort() {
+		try {
+			return Integer.decode(getFirst(HOST).split(":")[1]);
+		} catch (Exception e) {
+			return -1;
+		}
+	}
+
+	public long getMaxAge() {
+		List<String> list = get(CACHE_CONTROL);
+
+		if (list == null) return -1;
+
+		for (String item: list) {
+			int idx = item.indexOf(MAX_AGE);
+			if (idx >= 0) {
+				idx = item.indexOf('=', idx + MAX_AGE.length());
+				if (idx >= 0) {
+					try {
+						return Long.decode(item.substring(idx + 1).trim());
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		}
+
+		return -1;
+	}
+
+	public URI getLocation() {
+		try {
+			return new URI(getFirst(LOCATION));
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	public OutputStream send(OutputStream out) throws IOException {
+		validate();
+		return writeMessage(out, this, 256);
+	}
+
+	public void send(OutputStream out, byte [] entity) throws IOException {
+		validate();
+		writeMessage(out, this, entity);
+	}
+
+	public void send(OutputStream out, InputStream in) throws IOException {
+		validate();
+		writeMessage(out, this, in);
+	}
+
+	public void send(OutputStream out, File f) throws IOException {
+		validate();
+		writeMessage(out, this, f);
+	}
+
+	protected void validate() {}
+
+	/**
+	 * Make entity body stream for output.
+	 *
+	 * @param msg message header
+	 * @param out OutputStream for general message
+	 * @return OutputStream for entity body
+	 */
+	public static OutputStream writeMessage(OutputStream out, HttpMessage msg, final int maxChunkSize)
+		throws IOException
+	{
+		writeMessageHeaders(out, msg.getStartLine(), msg, CHUNKED, null);
+		
+		return new FilterOutputStream(out) {
+			int ofs = 0;
+			@Override public void write(int b) throws IOException {
+				if (ofs == 0) {
+					out.write(String.format("%x\r\n", maxChunkSize).getBytes());
+				}
+				out.write(b);
+				ofs++;
+				if (ofs >= maxChunkSize) {
+					out.write("\r\n".getBytes());
+					ofs = 0;
+				}
+			}
+		};
+	}
+
+	public static void writeMessage(OutputStream out, HttpMessage msg, byte [] entity)
+		throws IOException
+	{
+		String contLen = null;
+		if ((entity != null) && (entity.length > 0)) {
+			contLen = "" + entity.length;
+		}
+		writeMessageHeaders(out, msg.getStartLine(), msg, null, contLen);
+		if ((entity != null) && (entity.length > 0)) {
+			out.write(entity);
+		}
+	}
+
+	public static void writeMessage(OutputStream raw, HttpMessage msg, InputStream in)
+		throws IOException
+	{
+		OutputStream out = writeMessage(raw, msg, 256);
+		int b = in.read();
+		while (b >= 0) {
+			out.write(b);
+			b = in.read();
+		}
+	}
+
+	public static void writeMessage(OutputStream raw, HttpMessage msg, File f)
+		throws IOException
+	{
+		FileInputStream in = new FileInputStream(f);
+		writeMessage(raw, msg, in);
+		in.close();
+	}
+
+	private static void writeMessageHeaders(OutputStream out, String startLine, HttpMessage msg, String transEnc, String contLen)
+		throws IOException
+	{
+		out.write((startLine + "\r\n").getBytes());
+
+		for (String key: msg.keySet()) {
+			if (TRANSFER_ENCODING.equals(key)) continue;
+			if (CONTENT_LENGTH.equals(key)) continue;
+			String values = join(msg.get(key), ",");
+			out.write((key + ":" + values + "\r\n").getBytes());
+		}
+
+		if (transEnc != null) {
+			out.write((TRANSFER_ENCODING + ":" + transEnc + CRLF).getBytes());
+		}
+		if (contLen != null) {
+			out.write((CONTENT_LENGTH + ":" + contLen + CRLF).getBytes());
+		}
+
+		out.write("\r\n".getBytes());
+	}
+
+	private static String join(List<String> texts, String delim) {
+		if ((texts == null) || (texts.size() <= 0)) return "";
+
+		String out = texts.get(0);
+		for (int ii = 1; ii < texts.size(); ii++) {
+			out += delim + texts.get(ii);
+		}
+
+		return out;
+	}
+
+	public DatagramPacket toDatagramPacket() throws IOException {
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		send(out);
+		byte [] data = out.toByteArray();
+		return new DatagramPacket(data, data.length);
+	}
+
+	public interface Base
+	{
+		String getStartLine();
+		Set<String> keySet();
+		List<String> get(String name);
+		String getFirst(String name);
+		int getInt(String name, int defaultValue);
+		long getLong(String name, long defaultValue);
+		boolean isKeepAlive();
+		boolean isChunkedEncoding();
+		long getContentLength();
+		String getHost();
+		int getPort();
+		long getMaxAge();
+		URI getLocation();
+		OutputStream send(OutputStream out) throws IOException;
+		void send(OutputStream out, byte [] entity) throws IOException;
+		void send(OutputStream out, InputStream in) throws IOException;
+		void send(OutputStream out, File f) throws IOException;
+		DatagramPacket toDatagramPacket() throws IOException;
+	}
+
+	public static abstract class Const extends HttpMessage implements Base
+	{
+		private Const() { super(); }
+
+		public Const(HttpMessage msg) { super(msg); }
+
+		public Const(Const c) { super(((HttpMessage)c).mMap); }
+	}
+
+	public static abstract class Input extends Const implements Base
+	{
+		private InputStream mInput;
+
+		public InputStream getInputStream() { return mInput; }
+	}
+
+	public static abstract class Builder extends HttpMessage
+	{
+		public Builder() { super(); }
+
+		public Builder(HttpMessage msg) { super(msg); }
+
+		private void putImpl(String name, String value) {
+			List<String> list = get(name);
+
+			if (list == null) {
+				list = new ArrayList<String>();
+				((HttpMessage)this).mMap.put(name, list);
+			}
+
+			list.add(value);
+		}
+
+		private void putFirstImpl(String name, String value) {
+			List<String> list = get(name);
+
+			if (list == null) {
+				list = new ArrayList<String>();
+				((HttpMessage)this).mMap.put(name, list);
+			} else {
+				list.clear();
+			}
+
+			list.add(value);
+		}
+
+		public HttpMessage.Builder put(String name, String value) {
+			if (! isReserved(name)) return null;
+		
+			putImpl(name, value);
+			return this;
+		}
+
+		public HttpMessage.Builder putFirst(String name, String value) {
+			if (! isReserved(name)) return null;
+
+			putFirstImpl(name, value);
+			return this;
+		}
+
+		public HttpMessage.Builder setInt(String name, int value) {
+			putFirst(name, "" + value); return this;
+		}
+
+		public HttpMessage.Builder remove(String name) {
+			((HttpMessage)this).mMap.remove(name); return this;
+		}
+
+		public HttpMessage.Builder setHost(String host, int port) {
+			if (port < 0) {
+				setHost(host);
+			} else {
+				putFirstImpl(HOST, host + ":" + port);
+			}
+			return this;
+		}
+
+		public HttpMessage.Builder setHost(String host) {
+			putFirstImpl(HOST, host); return this;
+		}
+
+		public HttpMessage.Builder setLocation(String uri) {
+			putFirstImpl(LOCATION, uri); return this;
+		}
+
+		public HttpMessage.Builder setLocation(URI uri) {
+			setLocation(uri.toString()); return this;
+		}
+
+		public HttpMessage.Builder putServerToken(String product) {
+			putImpl(SERVER, product); return this;
+		}
+
+		public HttpMessage.Builder setMaxAge(long max) {
+			List<String> list = get(CACHE_CONTROL);
+
+			if (list != null) {
+				for (String item: list) {
+					int idx = item.indexOf(MAX_AGE);
+					if (idx >= 0) {
+						list.remove(item);
+					}
+				}
+			}
+			put(CACHE_CONTROL, MAX_AGE + "=" + max);
+			return this;
+		}
 	}
 
 	private static class FixedLengthInputStream extends FilterInputStream
@@ -339,8 +578,6 @@ public abstract class HttpMessage extends AbsHttpMessage
 		Input inp = new Input() {
 				@Override public String getStartLine() { return startLine; }
 			};
-		Const msg = (Const)inp;
-		
 		String line = readLine(in);
 
 		while (line.length() > 0) {
@@ -349,15 +586,15 @@ public abstract class HttpMessage extends AbsHttpMessage
 			String name = line.substring(0, mid).trim().toUpperCase();
 			String [] vals = line.substring(mid + 1).split(",", 0);
 			List<String> l = new ArrayList<String>();
-			msg.mMap.put(name, l);
+			((HttpMessage)inp).mMap.put(name, l);
 			for (String val : vals) l.add(val.trim());
 			line = readLine(in);
 		}
 
-		if (msg.isChunkedEncoding()) {
+		if (inp.isChunkedEncoding()) {
 			inp.mInput = new ChunkedInputStream(in);
 		} else {
-			long tmp = msg.getContentLength();
+			long tmp = inp.getContentLength();
 			inp.mInput = (tmp <= 0) ? null: new FixedLengthInputStream(in, tmp);
 		}
 
@@ -370,9 +607,9 @@ public abstract class HttpMessage extends AbsHttpMessage
 		
 		int	readLen = in.read(readBuf);
 		while (0 < readLen) {
-			if (readBuf[0] == Http.LF)
+			if (readBuf[0] == LF)
 				break;
-			if (readBuf[0] != Http.CR) 
+			if (readBuf[0] != CR) 
 				lineBuf.write(readBuf[0]);
 			readLen = in.read(readBuf);
 		}

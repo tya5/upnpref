@@ -1,6 +1,5 @@
 package org.tyas.upnp.ssdp;
 
-import org.tyas.http.Http;
 import org.tyas.http.HttpMessage;
 import org.tyas.http.HttpRequest;
 import org.tyas.http.HttpResponse;

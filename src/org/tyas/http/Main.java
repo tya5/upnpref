@@ -17,7 +17,7 @@ public class Main
 
 			System.out.println("Client: connect and request to server");
 			Socket client = new Socket("localhost", 8080);
-			new HttpRequest("GET", "/", Http.VERSION_1_1)
+			new HttpRequest.Builder("GET", "/", HttpMessage.VERSION_1_1)
 				.send(client.getOutputStream(), "Hello Client!".getBytes());
 
 			System.out.println("Server: accept request");
@@ -33,7 +33,7 @@ public class Main
 
 						String data = "Hello Server!";
 						
-						new HttpResponse(Http.VERSION_1_1, "200", "OK")
+						new HttpResponse.Builder(HttpMessage.VERSION_1_1, "200", "OK")
 							.send(ctx.getClient().getOutputStream(), data.getBytes());
 
 						System.out.println("Server: data='" + data + "'");

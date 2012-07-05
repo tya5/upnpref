@@ -106,7 +106,7 @@ public abstract class AbsActionMessage
 
 		writeDocument(array);
 		
-		new HttpRequest("POST", uri, Http.VERSION_1_1)
+		new HttpRequest.Builder("POST", uri, HttpMessage.VERSION_1_1)
 			.putFirst(SOAPACTION, "\"" + getServiceType() + "#" + getActionName() + "\"")
 			.send(out, array.toByteArray());
 	}
@@ -118,7 +118,7 @@ public abstract class AbsActionMessage
 
 		writeDocument(array);
 		
-		new HttpRequest("POST", uri, Http.VERSION_1_1)
+		new HttpRequest.Builder("POST", uri, HttpMessage.VERSION_1_1)
 			.setHost(sock.getInetAddress().getHostAddress(), sock.getPort())
 			.putFirst(SOAPACTION, "\"" + getServiceType() + "#" + getActionName() + "\"")
 			.send(sock.getOutputStream(), array.toByteArray());
@@ -140,8 +140,8 @@ public abstract class AbsActionMessage
 		ByteArrayOutputStream array = new ByteArrayOutputStream();
 
 		writeDocument(array);
-
-		new HttpResponse(Http.VERSION_1_1, "200", "OK")
+		
+		new HttpResponse.Builder(HttpMessage.VERSION_1_1, "200", "OK")
 			.send(out, array.toByteArray());
 	}
 }
