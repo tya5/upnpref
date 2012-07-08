@@ -80,12 +80,15 @@ public abstract class EventMessage
 		return new DatagramPacket(data, data.length);
 	}
 
-	public static EventMessage.Const getByHttpRequest(HttpRequest.Input req)
+	public static EventMessage.Const getByHttpRequest(HttpRequest.Input req, SubscribeId sid)
 		throws IOException, ParserConfigurationException, SAXException
 	{
 		EventMessage.Const e = new EventMessage.Const();
 
 		((EventMessage)e).mSid = SubscribeId.getBySid(req.getFirst(SID));
+
+		if ((sid != null) && (! ((EventMessage)e).mSid.equals(sid))) return null;
+
 		((EventMessage)e).mEventKey = req.getInt(SEQ, 0);
 
 		PropertySet map = ((EventMessage)e).mPropertySet;
