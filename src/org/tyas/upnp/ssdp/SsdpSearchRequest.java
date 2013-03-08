@@ -1,7 +1,10 @@
 package org.tyas.upnp.ssdp;
 
+import org.tyas.http.HttpHeaders;
 import org.tyas.http.HttpMessage;
 import org.tyas.http.HttpRequest;
+import org.tyas.http.HttpRequestLine;
+import org.tyas.http.HttpMessageFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -9,61 +12,57 @@ import java.io.OutputStream;
 import java.io.IOException;
 import java.net.DatagramPacket;
 
-public abstract class SsdpSearchRequest
+public class SsdpSearchRequest extends HttpRequest
 {
-	public interface Base extends HttpRequest.Base
-	{
-		int getMaxWaitTime();
-		String getSearchTarget();
-		String getMan();
+	private SsdpSearchRequest(HttpRequestLine startLine, HttpHeaders headers) {
+		super(startLine, headers);
 	}
 
-	public static class Const extends HttpRequest.Const implements Base
-	{
-		private Const(HttpRequest.Const c) {
-			super(c);
-		}
+	public int getMaxWaitTime() { return getInt(Ssdp.MX, -1); }
 
-		@Override public int getMaxWaitTime() { return getInt(Ssdp.MX, -1); }
+	public String getSearchTarget() { return getFirst(Ssdp.ST); }
 
-		@Override public String getSearchTarget() { return getFirst(Ssdp.ST); }
+	public String getMan() { return getFirst(Ssdp.MAN); }
 
-		@Override public String getMan() { return getFirst(Ssdp.MAN); }
+	public static SsdpSearchRequest read(InputStream in) throws IOException {
+		return HttpMessage.readMessage(in, HttpRequestLine.PARSER, FACTORY).getMessage();
 	}
 
-	public static class Builder extends HttpRequest.Builder implements Base
+	public static final HttpMessageFactory<HttpRequestLine,SsdpSearchRequest> FACTORY =
+		new HttpMessageFactory<HttpRequestLine,SsdpSearchRequest>()
 	{
-		public Builder() {
-			super(Ssdp.M_SEARCH, "*", HttpMessage.VERSION_1_1);
+		public SsdpSearchRequest createMessage(HttpRequestLine startLine, HttpHeaders headers) {
+			if (! Ssdp.M_SEARCH.equals(startLine.getMethod())) return null;
+
+			if (! HttpMessage.VERSION_1_1.equals(startLine.getHttpVersion())) return null;
+
+			return new SsdpSearchRequest(startLine, headers);
 		}
+	};
 
-		@Override public int getMaxWaitTime() { return getInt(Ssdp.MX, -1); }
+	public static class Builder
+	{
+		public final HttpMessage.Builder<HttpRequestLine> mHttpMessageBuilder =
+			new HttpMessage.Builder<HttpRequestLine>
+			(new HttpRequestLine(Ssdp.M_SEARCH, "*", HttpMessage.VERSION_1_1));
 
-		@Override public String getSearchTarget() { return getFirst(Ssdp.ST); }
-
-		@Override public String getMan() { return getFirst(Ssdp.MAN); }
-
-		public SsdpSearchRequest.Builder setMaxWaitTime(int seconds) {
-			setInt(Ssdp.MX, seconds);
+		public SsdpSearchRequest build() {
+			return mHttpMessageBuilder.build(FACTORY);
+		}
+	
+		public Builder setMaxWaitTime(int seconds) {
+			mHttpMessageBuilder.setInt(Ssdp.MX, seconds);
 			return this;
 		}
 
-		public SsdpSearchRequest.Builder setSearchTarget(String target) {
-			putFirst(Ssdp.ST, target);
+		public Builder setSearchTarget(String target) {
+			mHttpMessageBuilder.putFirst(Ssdp.ST, target);
 			return this;
 		}
 
-		public SsdpSearchRequest.Builder setMan(String man) {
-			putFirst(Ssdp.MAN, man);
+		public Builder setMan(String man) {
+			mHttpMessageBuilder.putFirst(Ssdp.MAN, man);
 			return this;
 		}
-	}
-
-	public static Const getByHttpRequest(HttpRequest.Const req) {
-		if (! Ssdp.M_SEARCH.equals(req.getMethod())) return null;
-
-		if (! HttpMessage.VERSION_1_1.equals(req.getVersion())) return null;
-
-		return new Const(req);
 	}
 }

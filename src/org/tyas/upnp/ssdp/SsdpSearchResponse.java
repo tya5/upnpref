@@ -1,7 +1,10 @@
 package org.tyas.upnp.ssdp;
 
+import org.tyas.http.HttpHeaders;
 import org.tyas.http.HttpMessage;
 import org.tyas.http.HttpResponse;
+import org.tyas.http.HttpStatusLine;
+import org.tyas.http.HttpMessageFactory;
 import org.tyas.upnp.UpnpUsn;
 
 import java.io.ByteArrayOutputStream;
@@ -12,89 +15,74 @@ import java.net.URI;
 import java.net.URL;
 import java.net.DatagramPacket;
 
-public abstract class SsdpSearchResponse
+public class SsdpSearchResponse extends HttpResponse implements Ssdp.RemoteDevicePointer
 {
-	public interface Base extends Ssdp.RemoteDevicePointer, HttpResponse.Base
-	{
-		//Date getDate();
-		String getSearchTarget();
+	private SsdpSearchResponse(HttpStatusLine startLine, HttpHeaders headers) {
+		super(startLine, headers);
 	}
 
-	public static class Const extends HttpResponse.Const implements Base
-	{
-		private Const(HttpResponse.Const c) {
-			super(c);
+	public URL getDescriptionUrl() {
+		try {
+			return getLocation().toURL();
+		} catch (Exception e) {
+			return null;
 		}
-
-		@Override public URL getDescriptionUrl() {
-			try {
-				return getLocation().toURL();
-			} catch (Exception e) {
-				return null;
-			}
-		}
-
-		@Override public String getSearchTarget() { return getFirst(Ssdp.ST); }
-
-		@Override public UpnpUsn getUniqueServiceName() { return UpnpUsn.getByString(getFirst(Ssdp.USN)); }
-
-		@Override public int getBootId() { return getInt(Ssdp.BOOTID, 0); }
-
-		@Override public int getConfigId() { return getInt(Ssdp.CONFIGID, 0); }
-
-		@Override public int getSearchPort() { return getInt(Ssdp.SEARCHPORT, -1); }
 	}
 
-	public static class Builder extends HttpResponse.Builder implements Base
+	public String getSearchTarget() { return getFirst(Ssdp.ST); }
+
+	public UpnpUsn getUniqueServiceName() { return UpnpUsn.getByString(getFirst(Ssdp.USN)); }
+
+	public int getBootId() { return getInt(Ssdp.BOOTID, 0); }
+
+	public int getConfigId() { return getInt(Ssdp.CONFIGID, 0); }
+
+	public int getSearchPort() { return getInt(Ssdp.SEARCHPORT, -1); }
+
+	public static SsdpSearchResponse read(InputStream in) throws IOException {
+		return HttpMessage.readMessage(in, HttpStatusLine.PARSER, FACTORY).getMessage();
+	}
+
+	public static final HttpMessageFactory<HttpStatusLine,SsdpSearchResponse> FACTORY =
+		new HttpMessageFactory<HttpStatusLine,SsdpSearchResponse>()
 	{
-		public Builder() {
-			super(HttpMessage.VERSION_1_1, "200", "OK");
+		public SsdpSearchResponse createMessage(HttpStatusLine startLine, HttpHeaders headers) {
+			return new SsdpSearchResponse(startLine, headers);
 		}
+	};
 
-		@Override public URL getDescriptionUrl() {
-			try {
-				return getLocation().toURL();
-			} catch (Exception e) {
-				return null;
-			}
+	public static class Builder
+	{
+		public final HttpMessage.Builder<HttpStatusLine> mHttpMessageBuilder =
+			new HttpMessage.Builder<HttpStatusLine>
+			(new HttpStatusLine(HttpMessage.VERSION_1_1, "200", "OK"));
+
+		public SsdpSearchResponse build() {
+			return mHttpMessageBuilder.build(FACTORY);
 		}
-
-		@Override public String getSearchTarget() { return getFirst(Ssdp.ST); }
-
-		@Override public UpnpUsn getUniqueServiceName() { return UpnpUsn.getByString(getFirst(Ssdp.USN)); }
-
-		@Override public int getBootId() { return getInt(Ssdp.BOOTID, 0); }
-
-		@Override public int getConfigId() { return getInt(Ssdp.CONFIGID, 0); }
-
-		@Override public int getSearchPort() { return getInt(Ssdp.SEARCHPORT, -1); }
 
 		public Builder setDescriptionUrl(String url) {
-			setLocation(url); return this;
+			mHttpMessageBuilder.setLocation(url); return this;
 		}
 
 		public Builder setSearchTarget(String target) {
-			putFirst(Ssdp.ST, target); return this;
+			mHttpMessageBuilder.putFirst(Ssdp.ST, target); return this;
 		}
 
 		public Builder setUniqueServiceName(String usn) {
-			putFirst(Ssdp.USN, usn); return this;
+			mHttpMessageBuilder.putFirst(Ssdp.USN, usn); return this;
 		}
 	
 		public Builder setBootId(int id) {
-			setInt(Ssdp.BOOTID, id); return this;
+			mHttpMessageBuilder.setInt(Ssdp.BOOTID, id); return this;
 		}
 
 		public Builder setConfigId(int id) {
-			setInt(Ssdp.CONFIGID, id); return this;
+			mHttpMessageBuilder.setInt(Ssdp.CONFIGID, id); return this;
 		}
 
 		public Builder setSearchPort(int port) {
-			setInt(Ssdp.SEARCHPORT, port); return this;
+			mHttpMessageBuilder.setInt(Ssdp.SEARCHPORT, port); return this;
 		}
-	}
-
-	public static Const getByHttpResponse(HttpResponse.Const resp) {
-		return new Const(resp);
 	}
 }

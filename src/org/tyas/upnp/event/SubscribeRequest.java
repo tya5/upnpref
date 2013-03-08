@@ -1,9 +1,14 @@
 package org.tyas.upnp.event;
 
+import org.tyas.http.HttpHeaders;
 import org.tyas.http.HttpMessage;
 import org.tyas.http.HttpRequest;
+import org.tyas.http.HttpRequestLine;
+import org.tyas.http.HttpMessageFactory;
 
-public abstract class SubscribeRequest
+import java.util.Set;
+
+public class SubscribeRequest extends HttpRequest
 {
 	public static final String SUBSCRIBE = "SUBSCRIBE";
 	public static final String UNSUBSCRIBE = "UNSUBSCRIBE";
@@ -13,98 +18,84 @@ public abstract class SubscribeRequest
 	public static final String SID = "SID";
 	public static final String UPNP_EVENT = "upnp:event";
 
-	public interface Base extends HttpRequest.Base
-	{
-		String getCallback();
-		int getTimeout();
-		SubscribeId getSid();
-		boolean isSubscribeRequest();
-		boolean isRenewRequest();
-		boolean isUnsubscribeRequest();
+	private SubscribeRequest(HttpRequestLine startLine, HttpHeaders headers) {
+		super(startLine, headers);
 	}
 
-	public static class Const extends HttpRequest.Const implements Base
+	public String getCallback() { return getFirst(CALLBACK); }
+	
+	public int getTimeout() { return unpackTimeout(getFirst(TIMEOUT)); }
+	
+	public SubscribeId getSid() { return SubscribeId.getBySid(getFirst(SID)); }
+	
+	public boolean isSubscribeRequest() {
+		return SubscribeRequest.isSubscribeRequest(getStartLine(), keySet());
+	}
+	
+	public boolean isRenewRequest() {
+		return SubscribeRequest.isRenewRequest(getStartLine(), keySet());
+	}
+	
+	public boolean isUnsubscribeRequest() {
+		return SubscribeRequest.isUnsubscribeRequest(getStartLine(), keySet());
+	}
+
+	public static final HttpMessageFactory<HttpRequestLine,SubscribeRequest> FACTORY =
+		new HttpMessageFactory<HttpRequestLine,SubscribeRequest>()
 	{
-		private Const(HttpRequest.Const c) {
-			super(c);
+		public SubscribeRequest createMessage(HttpRequestLine startLine, HttpHeaders headers) {
+			Set<String> keySet = headers.keySet();
+
+			if ((! isSubscribeRequest(startLine, keySet)) &&
+			    (! isRenewRequest(startLine, keySet)) &&
+			    (! isUnsubscribeRequest(startLine, keySet))) {
+				return null;
+			}
+			return new SubscribeRequest(startLine, headers);
 		}
+	};
 
-		@Override public String getCallback() { return getFirst(CALLBACK); }
-		@Override public int getTimeout() { return unpackTimeout(getFirst(TIMEOUT)); }
-		@Override public SubscribeId getSid() { return SubscribeId.getBySid(getFirst(SID)); }
-		@Override public boolean isSubscribeRequest() { return SubscribeRequest.isSubscribeRequest(this); }
-		@Override public boolean isRenewRequest() { return SubscribeRequest.isRenewRequest(this); }
-		@Override public boolean isUnsubscribeRequest() { return SubscribeRequest.isUnsubscribeRequest(this); }
-	}
-
-	public static class Builder extends HttpRequest.Builder implements Base
-	{
-		private Builder(String method, String uri) {
-			super(method, uri, HttpMessage.VERSION_1_1);
-		}
-
-		@Override public String getCallback() { return getFirst(CALLBACK); }
-		@Override public int getTimeout() { return unpackTimeout(getFirst(TIMEOUT)); }
-		@Override public SubscribeId getSid() { return SubscribeId.getBySid(getFirst(SID)); }
-		@Override public boolean isSubscribeRequest() { return SubscribeRequest.isSubscribeRequest(this); }
-		@Override public boolean isRenewRequest() { return SubscribeRequest.isRenewRequest(this); }
-		@Override public boolean isUnsubscribeRequest() { return SubscribeRequest.isUnsubscribeRequest(this); }
-	}
-
-	public static SubscribeRequest.Const getByHttpRequest(HttpRequest.Const req) {
-		if (isSubscribeRequest(req)) return new Const(req);
-
-		if (isRenewRequest(req)) return new Const(req);
-
-		if (isUnsubscribeRequest(req)) return new Const(req);
-
-		return null;
-	}
-
-	public static boolean isSubscribeRequest(HttpRequest.Base req) {
+	public static boolean isSubscribeRequest(HttpRequestLine startLine, Set<String> headersKeySet) {
 		return
-			SUBSCRIBE.equals(req.getMethod()) &&
-			req.keySet().contains(CALLBACK) &&
-			req.keySet().contains(TIMEOUT);
+			SUBSCRIBE.equals(startLine.getMethod()) &&
+			headersKeySet.contains(CALLBACK) &&
+			headersKeySet.contains(TIMEOUT);
 	}
 
-	public static boolean isRenewRequest(HttpRequest.Base req) {
+	public static boolean isRenewRequest(HttpRequestLine startLine, Set<String> headersKeySet) {
 		return
-			SUBSCRIBE.equals(req.getMethod()) &&
-			req.keySet().contains(SID) &&
-			req.keySet().contains(TIMEOUT);
+			SUBSCRIBE.equals(startLine.getMethod()) &&
+			headersKeySet.contains(SID) &&
+			headersKeySet.contains(TIMEOUT);
 	}
 
-	public static boolean isUnsubscribeRequest(HttpRequest.Base req) {
+	public static boolean isUnsubscribeRequest(HttpRequestLine startLine, Set<String> headersKeySet) {
 		return
-			UNSUBSCRIBE.equals(req.getMethod()) &&
-			req.keySet().contains(SID);
+			UNSUBSCRIBE.equals(startLine.getMethod()) &&
+			headersKeySet.contains(SID);
 	}
 
-	public static Builder getSubscribeRequest(String uri, String callback, int timeout) {
-		Builder req = new Builder(SUBSCRIBE, uri);
-
-		req.putFirst(CALLBACK, callback);
-		req.putFirst(TIMEOUT, packTimeout(timeout));
-
-		return req;
+	public static SubscribeRequest getSubscribeRequest(String uri, String callback, int timeout) {
+		return new HttpMessage.Builder<HttpRequestLine>
+			(new HttpRequestLine(SUBSCRIBE, uri, HttpMessage.VERSION_1_1))
+			.putFirst(CALLBACK, callback)
+			.putFirst(TIMEOUT, packTimeout(timeout))
+			.build(FACTORY);
 	}
 
-	public static Builder getRenewRequest(String uri, SubscribeId sid, int timeout) {
-		Builder req = new Builder(SUBSCRIBE, uri);
-
-		req.putFirst(SID, sid.toString());
-		req.putFirst(TIMEOUT, packTimeout(timeout));
-
-		return req;
+	public static SubscribeRequest getRenewRequest(String uri, SubscribeId sid, int timeout) {
+		return new HttpMessage.Builder<HttpRequestLine>
+			(new HttpRequestLine(SUBSCRIBE, uri, HttpMessage.VERSION_1_1))
+			.putFirst(SID, sid.toString())
+			.putFirst(TIMEOUT, packTimeout(timeout))
+			.build(FACTORY);
 	}
 
-	public static Builder getUnsubscribeRequest(String uri, SubscribeId sid) {
-		Builder req = new Builder(UNSUBSCRIBE, uri);
-
-		req.putFirst(SID, sid.toString());
-
-		return req;
+	public static SubscribeRequest getUnsubscribeRequest(String uri, SubscribeId sid) {
+		return new HttpMessage.Builder<HttpRequestLine>
+			(new HttpRequestLine(UNSUBSCRIBE, uri, HttpMessage.VERSION_1_1))
+			.putFirst(SID, sid.toString())
+			.build(FACTORY);
 	}
 
 	public static int unpackTimeout(String timeout) {

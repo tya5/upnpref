@@ -41,7 +41,7 @@ public class Main
 		SsdpSearchRequest.Builder req = new SsdpSearchRequest.Builder()
 			.setMaxWaitTime(mx)
 			.setMan(Ssdp.MAN_DISCOVER);
-		req.setHost(Ssdp.MULTICAST_HOST, Ssdp.DEFAULT_PORT);
+		req.mHttpMessageBuilder.setHost(Ssdp.MULTICAST_HOST, Ssdp.DEFAULT_PORT);
 
 		try {
 			MulticastSocket sock = new MulticastSocket(Ssdp.DEFAULT_PORT);
@@ -54,6 +54,7 @@ public class Main
 				if (! all) {
 					DatagramPacket pkt = req
 						.setSearchTarget(filter.getSearchTarget())
+						.build()
 						.toDatagramPacket();
 
 					pkt.setAddress(InetAddress.getByName(Ssdp.MULTICAST_HOST));
@@ -65,6 +66,7 @@ public class Main
 			if (all) {
 				DatagramPacket pkt = req
 					.setSearchTarget(Ssdp.ST_ALL)
+					.build()
 					.toDatagramPacket();
 
 				pkt.setAddress(InetAddress.getByName(Ssdp.MULTICAST_HOST));

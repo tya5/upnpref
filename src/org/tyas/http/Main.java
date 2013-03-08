@@ -17,23 +17,28 @@ public class Main
 
 			System.out.println("Client: connect and request to server");
 			Socket client = new Socket("localhost", 8080);
-			new HttpRequest.Builder("GET", "/", HttpMessage.VERSION_1_1)
+			new HttpMessage.Builder<HttpRequestLine>(new HttpRequestLine("GET", "/", HttpMessage.VERSION_1_1))
+				.build(HttpRequest.FACTORY)
 				.send(client.getOutputStream(), "Hello Client!".getBytes());
 
 			System.out.println("Server: accept request");
-			new HttpServer() {
-				@Override protected boolean handleHttpRequest(HttpRequest.Input req, HttpServer.Context ctx) {
+			new HttpServer<HttpRequest>(HttpRequest.FACTORY) {
+				@Override protected boolean handleHttpRequest(HttpMessage.Input<HttpRequest> req, HttpServer.Context ctx) {
 					try {
 						ByteArrayOutputStream ba = new ByteArrayOutputStream();
 						int d;
-						while ((d = req.getInputStream().read()) >= 0) ba.write(d);
+						InputStream in = req.getInputStream();
+						if (in != null) {
+							while ((d = in.read()) >= 0) ba.write(d);
+						}
 						System.out.println("Server: accept text: " + ba.toString());
 
 						System.out.println("Server: send response");
 
 						String data = "Hello Server!";
 						
-						new HttpResponse.Builder(HttpMessage.VERSION_1_1, "200", "OK")
+						new HttpMessage.Builder<HttpStatusLine>(new HttpStatusLine(HttpMessage.VERSION_1_1, "200", "OK"))
+							.build(HttpResponse.FACTORY)
 							.send(ctx.getClient().getOutputStream(), data.getBytes());
 
 						System.out.println("Server: data='" + data + "'");
@@ -45,16 +50,17 @@ public class Main
 					}
 				}
 			}.accept(server).run();
-
+			
 			System.out.println("Client: accept response");
-			HttpMessage.Input msg = HttpMessage.readMessage(client.getInputStream());
-			HttpResponse.Input resp = HttpResponse.getByInput(msg);
+			HttpMessage.Input<HttpResponse> resp = HttpResponse.readMessage(client.getInputStream());
 			InputStream content = resp.getInputStream();
 			ByteArrayOutputStream b = new ByteArrayOutputStream();
 			int data;
 
-			while ((data = content.read()) >= 0) {
-				b.write(data);
+			if (content != null) {
+				while ((data = content.read()) >= 0) {
+					b.write(data);
+				}
 			}
 
 			System.out.println("Client: data='" + b.toString() + "'");

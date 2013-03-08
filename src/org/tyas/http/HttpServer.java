@@ -8,11 +8,11 @@ import java.io.OutputStream;
 import java.io.IOException;
 import java.io.ByteArrayOutputStream;
 
-public class HttpServer
+public class HttpServer<R extends HttpRequest>
 {
-	public interface RequestHandler
+	public interface RequestHandler<R extends HttpRequest>
 	{
-		boolean handleHttpRequest(HttpRequest.Input req, Context ctx);
+		boolean handleHttpRequest(HttpMessage.Input<R> req, Context ctx);
 	}
 
 	public interface Context extends Runnable
@@ -21,21 +21,25 @@ public class HttpServer
 		Socket getClient();
 	}
 
-	private RequestHandler mHandler = new RequestHandler() {
-			@Override public boolean handleHttpRequest(HttpRequest.Input req, Context ctx) {
+	private final HttpMessageFactory<HttpRequestLine,R> mFactory;
+
+	private RequestHandler<R> mHandler = new RequestHandler<R>() {
+			@Override public boolean handleHttpRequest(HttpMessage.Input<R> req, Context ctx) {
 				HttpServer.this.handleHttpRequest(req, ctx);
 				return false;
 			}
 		};
 
-	public HttpServer() {
+	public HttpServer(HttpMessageFactory<HttpRequestLine,R> factory) {
+		mFactory = factory;
 	}
 
-	public HttpServer(RequestHandler handler) {
+	public HttpServer(HttpMessageFactory<HttpRequestLine,R> factory, RequestHandler<R> handler) {
+		mFactory = factory;
 		mHandler = handler;
 	}
 
-	public Context accept(final ServerSocket server, final RequestHandler handler) throws IOException {
+	public Context accept(final ServerSocket server, final RequestHandler<R> handler) throws IOException {
 		final Socket sock = server.accept();
 		
 		return new Context() {
@@ -47,21 +51,19 @@ public class HttpServer
 			}
 			@Override public void run() {
 				try {
-					HttpRequest.Input req;
+					HttpMessage.Input<R> req;
 					InputStream in = sock.getInputStream();
 
 					do {
-						HttpMessage.Input msg = HttpMessage.readMessage(in);
-
-						req = HttpRequest.getByInput(msg);
-
+						req = HttpMessage.readMessage(in, HttpRequestLine.PARSER, mFactory);
+						
 						if (req == null) break;
-
+						
 						if (handler == null) break;
-
+						
 						handler.handleHttpRequest(req, this);
 						
-					} while (req.isKeepAlive());
+					} while (req.getMessage().isKeepAlive());
 					
 				} catch (IOException e) {
 					e.printStackTrace();
@@ -80,7 +82,7 @@ public class HttpServer
 		return accept(server, mHandler);
 	}
 
-	protected boolean handleHttpRequest(HttpRequest.Input req, Context ctx) {
+	protected boolean handleHttpRequest(HttpMessage.Input<R> req, Context ctx) {
 		return false;
 	}
 }

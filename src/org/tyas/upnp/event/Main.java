@@ -30,29 +30,26 @@ public class Main
 
 		System.out.println("SID=" + sid.toString());
 
-		HttpServer server = new HttpServer() {
-				@Override public boolean handleHttpRequest(HttpRequest.Input req, HttpServer.Context ctx) {
-					try {
-						EventMessage e = EventMessage.getByHttpRequest(req, sid);
+		HttpServer server = new HttpServer<EventMessageHeader>(EventMessageHeader.FACTORY) {
+			@Override public boolean handleHttpRequest(HttpRequest.Input<EventMessageHeader> e, HttpServer.Context ctx) {
+				try {
+					System.out.println("EventKey["+e.getMessage().getEventKey()+"]");
 
-						if (e == null) return false;
-
-						System.out.println("EventKey["+e.getEventKey()+"]");
-
-						for (String name: e.getVariableNameSet()) {
-							System.out.println(name + "=" + e.getProperty(name));
-						}
+					EventMessage em = EventMessage.getByInput(e);
 					
-						new HttpResponse.Builder(HttpMessage.VERSION_1_1, "200", "OK")
-							.send(ctx.getClient().getOutputStream(), (byte[])null);
-
-						return true;
-					} catch (Exception e) {
-						e.printStackTrace();
-						return false;
+					for (String name: em.getVariableNameSet()) {
+						System.out.println(name + "=" + em.getProperty(name));
 					}
+
+					HttpResponse.RESPONSE_OK.send(ctx.getClient().getOutputStream(), (byte[])null);
+
+					return true;
+				} catch (Exception e) {
+					e.printStackTrace();
+					return false;
 				}
-			};
+			}
+		};
 
 		while (true) {
 			server.accept(serversock).run();

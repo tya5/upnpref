@@ -1,6 +1,7 @@
 package org.tyas.upnp.event;
 
-import org.tyas.http.HttpRequest;
+import org.tyas.http.HttpMessage;
+
 import java.util.*;
 import java.net.*;
 import java.io.*;
@@ -12,23 +13,25 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 
-public abstract class EventMessage
+public class EventMessage
 {
 	public static final String SID = "SID";
 	public static final String SEQ = "SEQ";
 	public static final String NS_EVENT = "urn:schemas-upnp-org:event-1-0";
 
-	private PropertySet mPropertySet = new PropertySet();
-	private SubscribeId mSid;
-	private int mEventKey;
+	private final PropertySet mPropertySet;
+	private final EventMessageHeader mHeader;
+
+	private EventMessage(EventMessageHeader header, PropertySet props) {
+		mPropertySet = props;
+		mHeader = header;
+	}
 
 	public Set<String> getVariableNameSet() { return mPropertySet.keySet(); }
 
 	public String getProperty(String variableName) { return mPropertySet.get(variableName); }
 
-	public SubscribeId getSid() { return mSid; }
-
-	public int getEventKey() { return mEventKey; }
+	public EventMessageHeader getHeader() { return mHeader; }
 
 	public Document toDocument() {
 		Document doc = null;
@@ -60,6 +63,7 @@ public abstract class EventMessage
 		return doc;
 	}
 
+	/*
 	public DatagramPacket toDatagramPacket(HttpRequest.Builder req)
 		throws IOException, TransformerException
 	{
@@ -79,25 +83,23 @@ public abstract class EventMessage
 
 		return new DatagramPacket(data, data.length);
 	}
+	*/
 
-	public static EventMessage.Const getByHttpRequest(HttpRequest.Input req, SubscribeId sid)
+	public static EventMessage getByHttpRequest(HttpMessage.Input<EventMessageHeader> req, SubscribeId sid)
 		throws IOException, ParserConfigurationException, SAXException
 	{
-		EventMessage.Const e = new EventMessage.Const();
+		EventMessageHeader e = req.getMessage();
 
-		((EventMessage)e).mSid = SubscribeId.getBySid(req.getFirst(SID));
+		if ((sid != null) && (! sid.equals(e.getSid()))) return null;
 
-		if ((sid != null) && (! ((EventMessage)e).mSid.equals(sid))) return null;
 
-		((EventMessage)e).mEventKey = req.getInt(SEQ, 0);
-
-		PropertySet map = ((EventMessage)e).mPropertySet;
-		Document doc;
-
+		PropertySet props = new PropertySet();
 		{
+			Document doc;
 			ByteArrayOutputStream arrayout = new ByteArrayOutputStream();
 			int data;
-			while ((data = req.getInputStream().read()) >= 0) arrayout.write(data);
+			InputStream in = req.getInputStream();
+			while ((data = in.read()) >= 0) arrayout.write(data);
 
 			ByteArrayInputStream arrayin = new ByteArrayInputStream(arrayout.toByteArray());
 			DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -105,11 +107,11 @@ public abstract class EventMessage
 			doc = factory
 				.newDocumentBuilder()
 				.parse(arrayin);
+
+			getPropertySetByDocument(doc, props);
 		}
 
-		getPropertySetByDocument(doc, ((EventMessage)e).mPropertySet);
-
-		return e;
+		return new EventMessage(e, props);
 	}
 
 	private static void getPropertySetByDocument(Document doc, PropertySet set) {
@@ -174,36 +176,27 @@ public abstract class EventMessage
 		return null;
 	}
 
-	public interface Base
-	{
-		SubscribeId getSid();
-		int getEventKey();
-		Set<String> getVariableNameSet();
-		String getProperty(String variableName);
-	}
-
 	private static class PropertySet extends HashMap<String,String> {}
 
-	public static class Const extends EventMessage implements Base
+	public static class Builder
 	{
-	}
+		private final PropertySet mPropertySet = new PropertySet();
+		public final EventMessageHeader.Builder mHeaderBuilder;
 
-	public static class Builder extends EventMessage implements Base
-	{
-		public EventMessage.Builder putProperty(String variableName, String value) {
-			((EventMessage)this).mPropertySet.put(variableName, value); return this;
+		public Builder(String deliveryPath) {
+			mHeaderBuilder = new EventMessageHeader.Builder(deliveryPath);
+		}
+
+		public Builder putProperty(String variableName, String value) {
+			mPropertySet.put(variableName, value); return this;
 		}
 
 		public EventMessage.Builder setSid(SubscribeId sid) {
-			((EventMessage)this).mSid = sid; return this;
+			mHeaderBuilder.setSid(sid); return this;
 		}
 
 		public EventMessage.Builder setEventKey(int key) {
-			((EventMessage)this).mEventKey = key; return this;
-		}
-
-		public EventMessage.Builder incrementEventKey() {
-			((EventMessage)this).mEventKey++; return this;
+			mHeaderBuilder.setEventKey(key); return this;
 		}
 	}
 }
