@@ -1,8 +1,8 @@
-package org.tyas.upnp.event;
+package org.tyas.upnp.gena;
 
 public class SubscribeId
 {
-	private String mUuid;
+	private final String mUuid;
 
 	public SubscribeId(String uuid) {
 		mUuid = uuid;

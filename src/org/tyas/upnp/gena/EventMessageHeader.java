@@ -1,4 +1,4 @@
-package org.tyas.upnp.event;
+package org.tyas.upnp.gena;
 
 import org.tyas.http.*;
 
