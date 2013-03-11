@@ -38,10 +38,10 @@ public class Main
 
 	public static void listen(SsdpFilter [] filters, int mx, boolean all) {
 		SsdpServer server = new SsdpServer();
-		SsdpSearchRequest.Builder req = new SsdpSearchRequest.Builder()
-			.setMaxWaitTime(mx)
-			.setMan(Ssdp.MAN_DISCOVER);
-		req.mHttpMessageBuilder.setHost(Ssdp.MULTICAST_HOST, Ssdp.DEFAULT_PORT);
+		SsdpSearchRequest.Builder builder = new SsdpSearchRequest.Builder();
+		builder.setMaxWaitTime(mx);
+		builder.setMan(Ssdp.MAN_DISCOVER);
+		builder.putHost(Ssdp.MULTICAST_HOST, Ssdp.DEFAULT_PORT);
 
 		try {
 			MulticastSocket sock = new MulticastSocket(Ssdp.DEFAULT_PORT);
@@ -52,11 +52,10 @@ public class Main
 				server.addHandler(filter.getSsdpHandler());
 
 				if (! all) {
-					DatagramPacket pkt = req
-						.setSearchTarget(filter.getSearchTarget())
-						.build()
-						.toDatagramPacket();
-
+					builder.setSearchTarget(filter.getSearchTarget());
+					
+					DatagramPacket pkt = builder.build().toDatagramPacket();
+					
 					pkt.setAddress(InetAddress.getByName(Ssdp.MULTICAST_HOST));
 					pkt.setPort(Ssdp.DEFAULT_PORT);
 					sock.send(pkt);
@@ -64,11 +63,10 @@ public class Main
 			}
 
 			if (all) {
-				DatagramPacket pkt = req
-					.setSearchTarget(Ssdp.ST_ALL)
-					.build()
-					.toDatagramPacket();
-
+				builder.setSearchTarget(Ssdp.ST_ALL);
+				
+				DatagramPacket pkt = builder.build().toDatagramPacket();
+				
 				pkt.setAddress(InetAddress.getByName(Ssdp.MULTICAST_HOST));
 				pkt.setPort(Ssdp.DEFAULT_PORT);
 				sock.send(pkt);

@@ -67,11 +67,11 @@ public abstract class SsdpFilter
 	}
 
 	protected void performOnAdvertisement(SsdpAdvertisement adv, InetAddress addr) {
-		String nts = adv.getNotificationSubType();
+		SsdpAdvertisement.Nts nts = adv.getNotificationSubType();
 		UpnpUsn usn = adv.getUniqueServiceName();
 
 		if (nts == null) {
-		} else if (nts.equals(Ssdp.NTS_ALIVE)) {
+		} else if (nts.equals(SsdpAdvertisement.Nts.ALIVE)) {
 			if (mMap.keySet().contains(usn)) {
 				mMap.put(usn, adv);
 				mListener.onAlive(adv, addr);
@@ -80,7 +80,7 @@ public abstract class SsdpFilter
 				mListener.onAdded(adv, addr);
 				mListener.onAlive(adv, addr);
 			}
-		} else if (nts.equals(Ssdp.NTS_UPDATE)) {
+		} else if (nts.equals(SsdpAdvertisement.Nts.UPDATE)) {
 			if (mMap.keySet().contains(usn)) {
 				mMap.put(usn, adv);
 				mListener.onUpdate(adv, addr);
@@ -89,7 +89,7 @@ public abstract class SsdpFilter
 				mListener.onAdded(adv, addr);
 				mListener.onUpdate(adv, addr);
 			}
-		} else if (nts.equals(Ssdp.NTS_BYEBYE)) {
+		} else if (nts.equals(SsdpAdvertisement.Nts.BYEBYE)) {
 			if (mMap.keySet().contains(usn)) {
 				mMap.remove(usn);
 				mListener.onByebye(adv, addr);

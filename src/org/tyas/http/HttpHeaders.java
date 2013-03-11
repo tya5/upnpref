@@ -21,6 +21,32 @@ public class HttpHeaders extends HashMap<String,List<String>>
 		return getAt(key, 0);
 	}
 
+	public HttpHeaders add(String name, String value) {
+		List<String> list = get(name);
+
+		if (list == null) {
+			list = new ArrayList<String>();
+			put(name, list);
+		}
+
+		list.add(value);
+		return this;
+	}
+
+	public HttpHeaders putFirst(String name, String value) {
+		List<String> list = get(name);
+
+		if (list == null) {
+			list = new ArrayList<String>();
+			put(name, list);
+		} else {
+			list.clear();
+		}
+
+		list.add(value);
+		return this;
+	}
+
 	public static void deepcopy(Map<String,List<String>> src, Map<String,List<String>> dst) {
 		if (src != null && dst != null) {
 			for (String key: src.keySet()) {

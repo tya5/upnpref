@@ -5,6 +5,8 @@ import java.util.regex.Matcher;
 
 public class HttpStatusLine implements HttpStartLine
 {
+	public static final HttpStatusLine DEFAULT_200_OK = new HttpStatusLine(HttpMessage.VERSION_1_1, "200", "OK");
+
 	private static final String REGEXP = "\\s*(HTTP/[0-9]+[.][0-9]+)\\s+([0-9]{3}+)\\s([^\r\n]*)";
 	private static final Pattern SYNTAX = Pattern.compile(REGEXP);
 

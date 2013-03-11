@@ -4,7 +4,6 @@ import org.tyas.http.HttpHeaders;
 import org.tyas.http.HttpMessage;
 import org.tyas.http.HttpResponse;
 import org.tyas.http.HttpStatusLine;
-import org.tyas.http.HttpMessageFactory;
 import org.tyas.upnp.UpnpUsn;
 
 import java.io.ByteArrayOutputStream;
@@ -43,46 +42,48 @@ public class SsdpSearchResponse extends HttpResponse implements Ssdp.RemoteDevic
 		return HttpMessage.readMessage(in, HttpStatusLine.PARSER, FACTORY).getMessage();
 	}
 
-	public static final HttpMessageFactory<HttpStatusLine,SsdpSearchResponse> FACTORY =
-		new HttpMessageFactory<HttpStatusLine,SsdpSearchResponse>()
+	public static final HttpMessage.Factory<HttpStatusLine,SsdpSearchResponse> FACTORY =
+		new HttpMessage.Factory<HttpStatusLine,SsdpSearchResponse>()
 	{
 		public SsdpSearchResponse createMessage(HttpStatusLine startLine, HttpHeaders headers) {
 			return new SsdpSearchResponse(startLine, headers);
 		}
 	};
 
-	public static class Builder
+	public static class Builder extends HttpResponse.Builder
 	{
-		public final HttpMessage.Builder<HttpStatusLine> mHttpMessageBuilder =
-			new HttpMessage.Builder<HttpStatusLine>
-			(new HttpStatusLine(HttpMessage.VERSION_1_1, "200", "OK"));
+		private final HttpStatusLine STATUS_LINE = new HttpStatusLine(HttpMessage.VERSION_1_1, "200", "OK");
+
+		public Builder() {
+			super.setStartLine(STATUS_LINE);
+		}
 
 		public SsdpSearchResponse build() {
-			return mHttpMessageBuilder.build(FACTORY);
+			return build(FACTORY);
 		}
 
-		public Builder setDescriptionUrl(String url) {
-			mHttpMessageBuilder.setLocation(url); return this;
+		public void setDescriptionUrl(String url) {
+			setLocation(url);
 		}
 
-		public Builder setSearchTarget(String target) {
-			mHttpMessageBuilder.putFirst(Ssdp.ST, target); return this;
+		public void setSearchTarget(String target) {
+			mMap.putFirst(Ssdp.ST, target);
 		}
 
-		public Builder setUniqueServiceName(String usn) {
-			mHttpMessageBuilder.putFirst(Ssdp.USN, usn); return this;
+		public void setUniqueServiceName(String usn) {
+			mMap.putFirst(Ssdp.USN, usn);
 		}
 	
-		public Builder setBootId(int id) {
-			mHttpMessageBuilder.setInt(Ssdp.BOOTID, id); return this;
+		public void setBootId(int id) {
+			putInt(Ssdp.BOOTID, id);
 		}
 
-		public Builder setConfigId(int id) {
-			mHttpMessageBuilder.setInt(Ssdp.CONFIGID, id); return this;
+		public void setConfigId(int id) {
+			putInt(Ssdp.CONFIGID, id);
 		}
 
-		public Builder setSearchPort(int port) {
-			mHttpMessageBuilder.setInt(Ssdp.SEARCHPORT, port); return this;
+		public void setSearchPort(int port) {
+			putInt(Ssdp.SEARCHPORT, port);
 		}
 	}
 }

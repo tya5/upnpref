@@ -24,8 +24,6 @@ public class HttpMessage<L extends HttpStartLine>
 	public static final String VERSION_1_0 = "HTTP/1.0";
 	public static final String VERSION_1_1 = "HTTP/1.1";
 
-	public static final String HOST = "HOST";
-	public static final String LOCATION = "LOCATION";
 	public static final String TRANSFER_ENCODING = "TRANSFER-ENCODING";
 	public static final String CONTENT_LENGTH = "CONTENT-LENGTH";
 	public static final String SERVER = "SERVER";
@@ -37,8 +35,6 @@ public class HttpMessage<L extends HttpStartLine>
 	public static final String MAX_AGE = "max-age";
 
 	private static final String [] mReservedTab = new String [] {
-		HOST,
-		LOCATION,
 		TRANSFER_ENCODING,
 		CONTENT_LENGTH,
 		SERVER,
@@ -128,26 +124,6 @@ public class HttpMessage<L extends HttpStartLine>
 		return cl == null ? -1: Long.decode(cl);
 	}
 
-	public String getHost() {
-		String host = getFirst(HOST);
-
-		if (host == null) return null;
-
-		try {
-			return host.split(":")[0];
-		} catch (Exception e) {
-			return "";
-		}
-	}
-
-	public int getPort() {
-		try {
-			return Integer.decode(getFirst(HOST).split(":")[1]);
-		} catch (Exception e) {
-			return -1;
-		}
-	}
-
 	public long getMaxAge() {
 		List<String> list = get(CACHE_CONTROL);
 
@@ -170,36 +146,32 @@ public class HttpMessage<L extends HttpStartLine>
 		return -1;
 	}
 
-	public URI getLocation() {
-		try {
-			return new URI(getFirst(LOCATION));
-		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
-		}
-	}
-
-	public OutputStream send(OutputStream out) throws IOException {
-		validate();
-		return writeMessage(out, this, 256);
+	public void send(OutputStream out) throws IOException {
+		send(out, null);
 	}
 
 	public void send(OutputStream out, byte [] entity) throws IOException {
-		validate();
 		writeMessage(out, this, entity);
 	}
 
-	public void send(OutputStream out, InputStream in) throws IOException {
-		validate();
-		writeMessage(out, this, in);
+	public OutputStream sendByChunked(OutputStream out) throws IOException {
+		return writeMessageByChunked(out, this, 256);
 	}
 
-	public void send(OutputStream out, File f) throws IOException {
-		validate();
-		writeMessage(out, this, f);
+	public void sendByChunked(OutputStream raw, InputStream in) throws IOException {
+		OutputStream out = writeMessageByChunked(raw, this, 256);
+		int b = in.read();
+		while (b >= 0) {
+			out.write(b);
+			b = in.read();
+		}
 	}
 
-	protected void validate() {}
+	public void sendByChunked(OutputStream out, File f) throws IOException {
+		FileInputStream in = new FileInputStream(f);
+		sendByChunked(out, in);
+		in.close();
+	}
 
 	/**
 	 * Make entity body stream for output.
@@ -208,7 +180,7 @@ public class HttpMessage<L extends HttpStartLine>
 	 * @param out OutputStream for general message
 	 * @return OutputStream for entity body
 	 */
-	public static OutputStream writeMessage(OutputStream out, HttpMessage msg, final int maxChunkSize)
+	public static OutputStream writeMessageByChunked(OutputStream out, HttpMessage msg, final int maxChunkSize)
 		throws IOException
 	{
 		writeMessageHeaders(out, msg, CHUNKED, null);
@@ -240,25 +212,6 @@ public class HttpMessage<L extends HttpStartLine>
 		if ((entity != null) && (entity.length > 0)) {
 			out.write(entity);
 		}
-	}
-
-	public static void writeMessage(OutputStream raw, HttpMessage<?> msg, InputStream in)
-		throws IOException
-	{
-		OutputStream out = writeMessage(raw, msg, 256);
-		int b = in.read();
-		while (b >= 0) {
-			out.write(b);
-			b = in.read();
-		}
-	}
-
-	public static void writeMessage(OutputStream raw, HttpMessage<?> msg, File f)
-		throws IOException
-	{
-		FileInputStream in = new FileInputStream(f);
-		writeMessage(raw, msg, in);
-		in.close();
 	}
 
 	private static void writeMessageHeaders(OutputStream out, HttpMessage<?> msg, String transEnc, String contLen)
@@ -321,7 +274,7 @@ public class HttpMessage<L extends HttpStartLine>
 		public L mStartLine;
 		public final HttpHeaders mMap = new HttpHeaders();
 
-		public Builder(L startLine) {
+		public void setStartLine(L startLine) {
 			mStartLine = startLine;
 		}
 
@@ -330,87 +283,26 @@ public class HttpMessage<L extends HttpStartLine>
 		}
 
 		private <M extends HttpMessage<L>> HttpMessage.Input<M> buildByInput(InputStream in, HttpMessage.Factory<L,M> factory) {
-			return new HttpMessage.Input<M>
-				(factory.createMessage(mStartLine, mMap), in);
+			return new HttpMessage.Input<M>(factory.createMessage(mStartLine, mMap), in);
 		}
 
-		private void putImpl(String name, String value) {
-			List<String> list = mMap.get(name);
-
-			if (list == null) {
-				list = new ArrayList<String>();
-				mMap.put(name, list);
-			}
-
-			list.add(value);
-		}
-
-		private void putFirstImpl(String name, String value) {
-			List<String> list = mMap.get(name);
-
-			if (list == null) {
-				list = new ArrayList<String>();
-				mMap.put(name, list);
-			} else {
-				list.clear();
-			}
-
-			list.add(value);
-		}
-
-		private HttpMessage.Builder<L> putAll(HttpHeaders headers) {
+		private void deepcopy(HttpHeaders headers) {
 			HttpHeaders.deepcopy(headers, mMap);
-			return this;
 		}
 
-		public HttpMessage.Builder<L> put(String name, String value) {
-			if (! isReserved(name)) return null;
-		
-			putImpl(name, value);
-			return this;
+		public void putInt(String name, int value) {
+			mMap.putFirst(name, "" + value);
 		}
 
-		public HttpMessage.Builder<L> putFirst(String name, String value) {
-			if (! isReserved(name)) return null;
-
-			putFirstImpl(name, value);
-			return this;
+		public void remove(String name) {
+			mMap.remove(name);
 		}
 
-		public HttpMessage.Builder<L> setInt(String name, int value) {
-			putFirst(name, "" + value); return this;
+		public void addServerToken(String product) {
+			mMap.add(SERVER, product);
 		}
 
-		public HttpMessage.Builder<L> remove(String name) {
-			mMap.remove(name); return this;
-		}
-
-		public HttpMessage.Builder<L> setHost(String host, int port) {
-			if (port < 0) {
-				setHost(host);
-			} else {
-				putFirstImpl(HOST, host + ":" + port);
-			}
-			return this;
-		}
-
-		public HttpMessage.Builder<L> setHost(String host) {
-			putFirstImpl(HOST, host); return this;
-		}
-
-		public HttpMessage.Builder<L> setLocation(String uri) {
-			putFirstImpl(LOCATION, uri); return this;
-		}
-
-		public HttpMessage.Builder<L> setLocation(URI uri) {
-			setLocation(uri.toString()); return this;
-		}
-
-		public HttpMessage.Builder<L> putServerToken(String product) {
-			putImpl(SERVER, product); return this;
-		}
-
-		public HttpMessage.Builder<L> setMaxAge(long max) {
+		public void putMaxAge(long max) {
 			List<String> list = mMap.get(CACHE_CONTROL);
 
 			if (list != null) {
@@ -421,8 +313,7 @@ public class HttpMessage<L extends HttpStartLine>
 					}
 				}
 			}
-			put(CACHE_CONTROL, MAX_AGE + "=" + max);
-			return this;
+			mMap.add(CACHE_CONTROL, MAX_AGE + "=" + max);
 		}
 	}
 
@@ -560,20 +451,10 @@ public class HttpMessage<L extends HttpStartLine>
 		public M createMessage(L startLine, HttpHeaders headers);
 	}
 
-	/**
-	 * Make entity body stream for input.
-	 *
-	 * @param in InputStream for general message
-	 * @return general message
-	 */
 	public static <L extends HttpStartLine, M extends HttpMessage<L>> Input<M> readMessage
-		(InputStream in, HttpStartLine.Parser<L> parser, Factory<L,M> factory)
-		throws IOException {
+		(InputStream in, HttpStartLine.Parser<L> parser, Factory<L,M> factory) throws IOException {
 		
-		String line;
-		
-		line = readLine(in).trim();
-		
+		String line = readLine(in).trim();
 		L startLine = parser.parse(line);
 		
 		if (startLine == null) {
@@ -582,10 +463,7 @@ public class HttpMessage<L extends HttpStartLine>
 		
 		HttpHeaders headers = readHeaders(in);
 		InputStream entity = readEntity(in, headers);
-		
-		return new Builder<L>(startLine)
-			.putAll(headers)
-			.buildByInput(entity, factory);
+		return new Input<M>(factory.createMessage(startLine, headers), entity);
 	}
 
 	public static HttpHeaders readHeaders(InputStream in) throws IOException {

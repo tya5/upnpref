@@ -4,7 +4,6 @@ import org.tyas.http.HttpHeaders;
 import org.tyas.http.HttpMessage;
 import org.tyas.http.HttpRequest;
 import org.tyas.http.HttpRequestLine;
-import org.tyas.http.HttpMessageFactory;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -28,8 +27,8 @@ public class SsdpSearchRequest extends HttpRequest
 		return HttpMessage.readMessage(in, HttpRequestLine.PARSER, FACTORY).getMessage();
 	}
 
-	public static final HttpMessageFactory<HttpRequestLine,SsdpSearchRequest> FACTORY =
-		new HttpMessageFactory<HttpRequestLine,SsdpSearchRequest>()
+	public static final HttpMessage.Factory<HttpRequestLine,SsdpSearchRequest> FACTORY =
+		new HttpMessage.Factory<HttpRequestLine,SsdpSearchRequest>()
 	{
 		public SsdpSearchRequest createMessage(HttpRequestLine startLine, HttpHeaders headers) {
 			if (! Ssdp.M_SEARCH.equals(startLine.getMethod())) return null;
@@ -40,29 +39,28 @@ public class SsdpSearchRequest extends HttpRequest
 		}
 	};
 
-	public static class Builder
+	public static class Builder extends HttpRequest.Builder
 	{
-		public final HttpMessage.Builder<HttpRequestLine> mHttpMessageBuilder =
-			new HttpMessage.Builder<HttpRequestLine>
-			(new HttpRequestLine(Ssdp.M_SEARCH, "*", HttpMessage.VERSION_1_1));
+		private final HttpRequestLine REQUEST_LINE = new HttpRequestLine(Ssdp.M_SEARCH, "*", HttpMessage.VERSION_1_1);
+
+		public Builder() {
+			super.setStartLine(REQUEST_LINE);
+		}
 
 		public SsdpSearchRequest build() {
-			return mHttpMessageBuilder.build(FACTORY);
+			return build(FACTORY);
 		}
 	
-		public Builder setMaxWaitTime(int seconds) {
-			mHttpMessageBuilder.setInt(Ssdp.MX, seconds);
-			return this;
+		public void setMaxWaitTime(int seconds) {
+			putInt(Ssdp.MX, seconds);
 		}
 
-		public Builder setSearchTarget(String target) {
-			mHttpMessageBuilder.putFirst(Ssdp.ST, target);
-			return this;
+		public void setSearchTarget(String target) {
+			mMap.putFirst(Ssdp.ST, target);
 		}
 
-		public Builder setMan(String man) {
-			mHttpMessageBuilder.putFirst(Ssdp.MAN, man);
-			return this;
+		public void setMan(String man) {
+			mMap.putFirst(Ssdp.MAN, man);
 		}
 	}
 }

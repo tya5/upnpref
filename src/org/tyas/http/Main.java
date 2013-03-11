@@ -7,19 +7,26 @@ import java.io.FileInputStream;
 import java.io.ByteArrayOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.InetAddress;
 
 public class Main
 {
 	public static void main(String [] args) {
+		final HttpRequestLine REQUEST_GET = new HttpRequestLine("GET", "/", HttpMessage.VERSION_1_1);
+
 		try {
+			InetAddress local = InetAddress.getLocalHost();
+
 			System.out.println("Server: start server");
-			ServerSocket server = new ServerSocket(8080);
+			ServerSocket server = new ServerSocket(8080, 1, local);
 
 			System.out.println("Client: connect and request to server");
-			Socket client = new Socket("localhost", 8080);
-			new HttpMessage.Builder<HttpRequestLine>(new HttpRequestLine("GET", "/", HttpMessage.VERSION_1_1))
-				.build(HttpRequest.FACTORY)
-				.send(client.getOutputStream(), "Hello Client!".getBytes());
+			Socket client = new Socket(local, 8080);
+			HttpRequest.Builder builder = new HttpRequest.Builder();
+			builder.setStartLine(REQUEST_GET);
+			builder.putHost(local.getHostAddress(), 8080);
+			builder.build().send(client.getOutputStream(), "Hello Client!".getBytes());
+			builder = null;
 
 			System.out.println("Server: accept request");
 			new HttpServer<HttpRequest>(HttpRequest.FACTORY) {
@@ -37,9 +44,10 @@ public class Main
 
 						String data = "Hello Server!";
 						
-						new HttpMessage.Builder<HttpStatusLine>(new HttpStatusLine(HttpMessage.VERSION_1_1, "200", "OK"))
-							.build(HttpResponse.FACTORY)
-							.send(ctx.getClient().getOutputStream(), data.getBytes());
+						HttpResponse.Builder builder = new HttpResponse.Builder();
+						builder.setStartLine(HttpStatusLine.DEFAULT_200_OK);
+						builder.build().send(ctx.getClient().getOutputStream(), data.getBytes());
+						builder = null;
 
 						System.out.println("Server: data='" + data + "'");
 
