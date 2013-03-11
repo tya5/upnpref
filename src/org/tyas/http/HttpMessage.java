@@ -325,11 +325,11 @@ public class HttpMessage<L extends HttpStartLine>
 			mStartLine = startLine;
 		}
 
-		public <M extends HttpMessage<L>> M build(HttpMessageFactory<L,M> factory) {
+		public <M extends HttpMessage<L>> M build(HttpMessage.Factory<L,M> factory) {
 			return factory.createMessage(mStartLine, mMap);
 		}
 
-		private <M extends HttpMessage<L>> HttpMessage.Input<M> buildByInput(InputStream in, HttpMessageFactory<L,M> factory) {
+		private <M extends HttpMessage<L>> HttpMessage.Input<M> buildByInput(InputStream in, HttpMessage.Factory<L,M> factory) {
 			return new HttpMessage.Input<M>
 				(factory.createMessage(mStartLine, mMap), in);
 		}
@@ -556,6 +556,10 @@ public class HttpMessage<L extends HttpStartLine>
 		}
 	}
 
+	public interface Factory<L extends HttpStartLine, M extends HttpMessage<L>> {
+		public M createMessage(L startLine, HttpHeaders headers);
+	}
+
 	/**
 	 * Make entity body stream for input.
 	 *
@@ -563,7 +567,7 @@ public class HttpMessage<L extends HttpStartLine>
 	 * @return general message
 	 */
 	public static <L extends HttpStartLine, M extends HttpMessage<L>> Input<M> readMessage
-		(InputStream in, HttpStartLineParser<L> parser, HttpMessageFactory<L,M> factory)
+		(InputStream in, HttpStartLine.Parser<L> parser, Factory<L,M> factory)
 		throws IOException {
 		
 		String line;

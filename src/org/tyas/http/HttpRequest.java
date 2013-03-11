@@ -13,8 +13,8 @@ public class HttpRequest extends HttpMessage<HttpRequestLine>
 		return HttpMessage.readMessage(in, HttpRequestLine.PARSER, FACTORY);
 	}
 
-	public static final HttpMessageFactory<HttpRequestLine,HttpRequest> FACTORY =
-		new HttpMessageFactory<HttpRequestLine,HttpRequest>()
+	public static final HttpMessage.Factory<HttpRequestLine,HttpRequest> FACTORY =
+		new HttpMessage.Factory<HttpRequestLine,HttpRequest>()
 	{
 		public HttpRequest createMessage(HttpRequestLine startLine, HttpHeaders headers) {
 			return new HttpRequest(startLine, headers);

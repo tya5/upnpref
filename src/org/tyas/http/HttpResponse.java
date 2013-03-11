@@ -13,8 +13,8 @@ public class HttpResponse extends HttpMessage<HttpStatusLine>
 		return HttpMessage.readMessage(in, HttpStatusLine.PARSER, FACTORY);
 	}
 
-	public static final HttpMessageFactory<HttpStatusLine,HttpResponse> FACTORY =
-		new HttpMessageFactory<HttpStatusLine,HttpResponse>()
+	public static final HttpMessage.Factory<HttpStatusLine,HttpResponse> FACTORY =
+		new HttpMessage.Factory<HttpStatusLine,HttpResponse>()
 		{
 			public HttpResponse createMessage(HttpStatusLine startLine, HttpHeaders headers) {
 				return new HttpResponse(startLine, headers);

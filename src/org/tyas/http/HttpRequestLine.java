@@ -30,8 +30,8 @@ public class HttpRequestLine implements HttpStartLine
 
 	public String getHttpVersion() { return mHttpVersion; }
 
-	public static final HttpStartLineParser<HttpRequestLine> PARSER =
-		new HttpStartLineParser<HttpRequestLine>()
+	public static final HttpStartLine.Parser<HttpRequestLine> PARSER =
+		new HttpStartLine.Parser<HttpRequestLine>()
 	{
 		public HttpRequestLine parse(String line) {
 			Matcher m = SYNTAX.matcher(line);

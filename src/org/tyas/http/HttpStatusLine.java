@@ -30,8 +30,8 @@ public class HttpStatusLine implements HttpStartLine
 
 	public String getReasonPhrase() { return mReasonPhrase; }
 
-	public static final HttpStartLineParser<HttpStatusLine> PARSER =
-		new HttpStartLineParser<HttpStatusLine>()
+	public static final HttpStartLine.Parser<HttpStatusLine> PARSER =
+		new HttpStartLine.Parser<HttpStatusLine>()
 	{
 		public HttpStatusLine parse(String line) {
 			Matcher m = SYNTAX.matcher(line);

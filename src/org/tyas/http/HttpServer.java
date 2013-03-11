@@ -21,7 +21,7 @@ public class HttpServer<R extends HttpRequest>
 		Socket getClient();
 	}
 
-	private final HttpMessageFactory<HttpRequestLine,R> mFactory;
+	private final HttpMessage.Factory<HttpRequestLine,R> mFactory;
 
 	private RequestHandler<R> mHandler = new RequestHandler<R>() {
 			@Override public boolean handleHttpRequest(HttpMessage.Input<R> req, Context ctx) {
@@ -30,11 +30,11 @@ public class HttpServer<R extends HttpRequest>
 			}
 		};
 
-	public HttpServer(HttpMessageFactory<HttpRequestLine,R> factory) {
+	public HttpServer(HttpMessage.Factory<HttpRequestLine,R> factory) {
 		mFactory = factory;
 	}
 
-	public HttpServer(HttpMessageFactory<HttpRequestLine,R> factory, RequestHandler<R> handler) {
+	public HttpServer(HttpMessage.Factory<HttpRequestLine,R> factory, RequestHandler<R> handler) {
 		mFactory = factory;
 		mHandler = handler;
 	}
