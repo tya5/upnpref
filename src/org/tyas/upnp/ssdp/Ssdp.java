@@ -1,13 +1,9 @@
 package org.tyas.upnp.ssdp;
 
 import java.net.URL;
-import java.net.DatagramPacket;
-import java.io.IOException;
-import java.io.ByteArrayOutputStream;
-
 import org.tyas.upnp.UpnpUsn;
 
-public class Ssdp
+public interface Ssdp
 {
 	public static final String REQUEST_URI = "*";
 	public static final String NOTIFY = "NOTIFY";

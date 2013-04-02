@@ -2,8 +2,6 @@ package org.tyas.upnp.ssdp;
 
 import org.tyas.http.HttpHeaders;
 import org.tyas.http.HttpMessage;
-import org.tyas.http.HttpRequest;
-import org.tyas.http.HttpResponse;
 import org.tyas.http.HttpRequestLine;
 import org.tyas.http.HttpStatusLine;
 
@@ -82,8 +80,6 @@ public class SsdpServer
 
 					String line = HttpMessage.readLine(in);
 					HttpHeaders headers = HttpMessage.readHeaders(in);
-					InputStream entity = HttpMessage.readEntity(in, headers); // should be discarded
-
 					HttpStatusLine statusLine = HttpStatusLine.PARSER.parse(line);
 					if (statusLine != null) {
 						SsdpSearchResponse sresp = SsdpSearchResponse.FACTORY.createMessage(statusLine, headers);

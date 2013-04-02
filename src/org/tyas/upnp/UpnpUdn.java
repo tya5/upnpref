@@ -2,7 +2,7 @@ package org.tyas.upnp;
 
 public class UpnpUdn
 {
-	private String mUuid;
+	private final String mUuid;
 
 	public UpnpUdn(String uuid) {
 		mUuid = uuid;

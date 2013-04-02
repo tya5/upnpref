@@ -5,11 +5,8 @@ import org.tyas.http.HttpMessage;
 import org.tyas.http.HttpRequest;
 import org.tyas.http.HttpRequestLine;
 
-import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.io.IOException;
-import java.net.DatagramPacket;
 
 public class SsdpSearchRequest extends HttpRequest
 {
@@ -41,10 +38,18 @@ public class SsdpSearchRequest extends HttpRequest
 
 	public static class Builder extends HttpRequest.Builder
 	{
-		private final HttpRequestLine REQUEST_LINE = new HttpRequestLine(Ssdp.M_SEARCH, "*", HttpMessage.VERSION_1_1);
+		private static final HttpRequestLine REQUEST_LINE = new HttpRequestLine(Ssdp.M_SEARCH, "*", HttpMessage.VERSION_1_1);
+
+		public Builder(String host, int port) {
+			super(REQUEST_LINE, host, port);
+			
+			mMap.setFirst(Ssdp.MAN, Ssdp.MAN_DISCOVER);
+			setSearchTarget(Ssdp.ST_ALL);
+			setMaxWaitTime(1800);
+		}
 
 		public Builder() {
-			super.setStartLine(REQUEST_LINE);
+			this(Ssdp.MULTICAST_HOST, Ssdp.DEFAULT_PORT);
 		}
 
 		public SsdpSearchRequest build() {
@@ -56,11 +61,7 @@ public class SsdpSearchRequest extends HttpRequest
 		}
 
 		public void setSearchTarget(String target) {
-			mMap.putFirst(Ssdp.ST, target);
-		}
-
-		public void setMan(String man) {
-			mMap.putFirst(Ssdp.MAN, man);
+			mMap.setFirst(Ssdp.ST, target);
 		}
 	}
 }

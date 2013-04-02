@@ -4,7 +4,7 @@ import org.tyas.upnp.UpnpServiceType;
 
 public class SsdpServiceTypeFilter extends SsdpFilter
 {
-	private UpnpServiceType mType;
+	private final UpnpServiceType mType;
 
 	public SsdpServiceTypeFilter(Listener listener, UpnpServiceType type) {
 		super(listener);

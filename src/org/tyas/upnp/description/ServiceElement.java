@@ -92,7 +92,7 @@ public class ServiceElement implements Description.ServiceElement
 			} else if (tag.equals("serviceType")) {
 				serv.setType(UpnpServiceType.getByUrn(Description.getStringByNode(node)));
 			} else if (tag.equals("serviceId")) {
-				serv.setId(UpnpServiceId.getByUrn(Description.getStringByNode(node)));
+				serv.setId(UpnpServiceId.getByString(Description.getStringByNode(node)));
 			} else if (tag.equals("SCPDURL")) {
 				serv.setScpdUrl(Description.getStringByNode(node));
 			} else if (tag.equals("controlURL")) {

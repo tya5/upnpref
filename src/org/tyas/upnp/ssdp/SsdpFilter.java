@@ -19,7 +19,7 @@ public abstract class SsdpFilter
 		protected void onFound(Ssdp.RemoteDevicePointer ptr, InetAddress addr) {}
 	}
 
-	private Map<UpnpUsn,Ssdp.RemoteDevicePointer> mMap = new HashMap<UpnpUsn,Ssdp.RemoteDevicePointer>();
+	private final Map<UpnpUsn,Ssdp.RemoteDevicePointer> mMap = new HashMap<UpnpUsn,Ssdp.RemoteDevicePointer>();
 	private Listener mListener = new Listener() {
 			@Override protected void onAdded(Ssdp.RemoteDevicePointer ptr, InetAddress addr) {
 				SsdpFilter.this.onAdded(ptr, addr);

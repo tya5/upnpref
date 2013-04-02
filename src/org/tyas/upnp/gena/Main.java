@@ -16,33 +16,37 @@ public class Main
 	public static void listen(String [] args) throws Exception {
 		URL eventUrl = null;
 		URL callbackUrl = null;
-
+		
+		// EventServer prepares for Unicast Event Message
 		ServerSocket serversock = new ServerSocket(callbackUrl.getPort());
+		
+		// Client send SubscribeRequest
 		Socket sock = new Socket(eventUrl.getHost(), eventUrl.getPort());
-
-		SubscribeRequest
-			.getSubscribeRequest(eventUrl.getPath(), callbackUrl.toString(), 5)
+		
+		GenaSubscribeRequest
+			.getSubscribeRequest(eventUrl.getHost(), eventUrl.getPort(), eventUrl.getPath(), callbackUrl.toString(), 5)
 			.send(sock.getOutputStream(), (byte[])null);
-
-		HttpMessage.Input msg = HttpMessage.readMessage(sock.getInputStream());
-		HttpResponse.Input resp = HttpResponse.getByInput(msg);
-		final SubscribeId sid = SubscribeId.getBySid(resp.getFirst("SID"));
-
+		
+		// Client recv SubscribeResponse
+		GenaSubscribeResponse sresp = GenaSubscribeResponse.read(sock.getInputStream());
+		final GenaSubscribeId sid = sresp.getSid();
+		
 		System.out.println("SID=" + sid.toString());
-
-		HttpServer server = new HttpServer<EventMessageHeader>(EventMessageHeader.FACTORY) {
-			@Override public boolean handleHttpRequest(HttpRequest.Input<EventMessageHeader> e, HttpServer.Context ctx) {
+		
+		// EventServer accepts Unicast Event Message
+		HttpServer server = new HttpServer<GenaEventMessage>(GenaEventMessage.FACTORY) {
+			@Override public boolean handleHttpRequest(HttpRequest.Input<GenaEventMessage> ev, HttpServer.Context ctx) {
 				try {
-					System.out.println("EventKey["+e.getMessage().getEventKey()+"]");
-
-					EventMessage em = EventMessage.getByInput(e);
+					System.out.println("EventKey["+ev.getMessage().getEventKey()+"]");
 					
-					for (String name: em.getVariableNameSet()) {
-						System.out.println(name + "=" + em.getProperty(name));
+					GenaPropertySet props = GenaPropertySet.read(ev.getInputStream());
+					
+					for (String name: props.keySet()) {
+						System.out.println(name + "=" + props.get(name));
 					}
-
-					HttpResponse.RESPONSE_OK.send(ctx.getClient().getOutputStream(), (byte[])null);
-
+					
+					HttpResponse.DEFAULT_200_OK.send(ctx.getClient().getOutputStream(), (byte[])null);
+					
 					return true;
 				} catch (Exception e) {
 					e.printStackTrace();

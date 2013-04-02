@@ -2,8 +2,8 @@ package org.tyas.upnp;
 
 public class UpnpUsn
 {
-	private String mPrefix;
-	private String mSuffix;
+	private final String mPrefix;
+	private final String mSuffix;
 
 	public UpnpUsn(String pfx, String sfx) {
 		mPrefix = pfx;

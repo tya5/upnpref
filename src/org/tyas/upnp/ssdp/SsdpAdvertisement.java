@@ -7,13 +7,10 @@ import org.tyas.http.HttpRequestLine;
 import org.tyas.upnp.UpnpUsn;
 
 import java.util.Set;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.net.URI;
 import java.net.URL;
-import java.net.DatagramPacket;
 
 public class SsdpAdvertisement extends HttpRequest implements Ssdp.RemoteDevicePointer
 {
@@ -119,16 +116,15 @@ public class SsdpAdvertisement extends HttpRequest implements Ssdp.RemoteDeviceP
 	
 	public static class Builder extends HttpRequest.Builder
 	{
-		private final HttpRequestLine REQUEST_LINE = new HttpRequestLine(Ssdp.NOTIFY, "*", HttpMessage.VERSION_1_1);
+		private static final HttpRequestLine REQUEST_LINE = new HttpRequestLine(Ssdp.NOTIFY, "*", HttpMessage.VERSION_1_1);
 
-		public Builder() {
-			super.setStartLine(REQUEST_LINE);
-			putHost("239.255.255.255", 1900);
+		public Builder(String host, int port) {
+			super(REQUEST_LINE, "239.255.255.255", 1900);
 			putMaxAge(1800);
 		}
 
 		public void setDescriptionUrl(String url) {
-			mMap.putFirst(Ssdp.LOCATION, url);
+			mMap.setFirst(Ssdp.LOCATION, url);
 		}
 
 		public void setBootId(int id) {
@@ -144,7 +140,7 @@ public class SsdpAdvertisement extends HttpRequest implements Ssdp.RemoteDeviceP
 		}
 
 		public void setNotificationSubType(Nts nts) {
-			mMap.putFirst(Ssdp.NTS, nts.getStringValue());
+			mMap.setFirst(Ssdp.NTS, nts.getStringValue());
 		}
 
 		public SsdpAdvertisement build() {

@@ -39,14 +39,11 @@ public class Main
 	public static void listen(SsdpFilter [] filters, int mx, boolean all) {
 		SsdpServer server = new SsdpServer();
 		SsdpSearchRequest.Builder builder = new SsdpSearchRequest.Builder();
-		builder.setMaxWaitTime(mx);
-		builder.setMan(Ssdp.MAN_DISCOVER);
-		builder.putHost(Ssdp.MULTICAST_HOST, Ssdp.DEFAULT_PORT);
 
 		try {
-			MulticastSocket sock = new MulticastSocket(Ssdp.DEFAULT_PORT);
+			MulticastSocket sock = new MulticastSocket(builder.getPort());
 
-			sock.joinGroup(InetAddress.getByName(Ssdp.MULTICAST_HOST));
+			sock.joinGroup(InetAddress.getByName(builder.getHost()));
 			
 			for (SsdpFilter filter: filters) {
 				server.addHandler(filter.getSsdpHandler());
@@ -56,8 +53,8 @@ public class Main
 					
 					DatagramPacket pkt = builder.build().toDatagramPacket();
 					
-					pkt.setAddress(InetAddress.getByName(Ssdp.MULTICAST_HOST));
-					pkt.setPort(Ssdp.DEFAULT_PORT);
+					pkt.setAddress(InetAddress.getByName(builder.getHost()));
+					pkt.setPort(builder.getPort());
 					sock.send(pkt);
 				}
 			}
@@ -72,7 +69,7 @@ public class Main
 				sock.send(pkt);
 			}
 
-			for (int ii = 0; ; ii++) {
+			while (true) {
 				server.accept(sock).run();
 			}
 			

@@ -4,7 +4,7 @@ import org.tyas.upnp.UpnpUdn;
 
 public class SsdpDeviceFilter extends SsdpFilter
 {
-	private UpnpUdn mUdn;
+	private final UpnpUdn mUdn;
 
 	public SsdpDeviceFilter(Listener listener, UpnpUdn udn) {
 		super(listener);

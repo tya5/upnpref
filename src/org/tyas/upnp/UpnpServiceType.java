@@ -2,9 +2,9 @@ package org.tyas.upnp;
 
 public class UpnpServiceType
 {
-	private String mDomain;
-	private String mType;
-	private String mVersion;
+	private final String mDomain;
+	private final String mType;
+	private final String mVersion;
 
 	public static final String SCHEMAS_UPNP_ORG = "schemas-upnp-org";
 

@@ -6,13 +6,9 @@ import org.tyas.http.HttpResponse;
 import org.tyas.http.HttpStatusLine;
 import org.tyas.upnp.UpnpUsn;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URI;
 import java.net.URL;
-import java.net.DatagramPacket;
 
 public class SsdpSearchResponse extends HttpResponse implements Ssdp.RemoteDevicePointer
 {
@@ -52,10 +48,12 @@ public class SsdpSearchResponse extends HttpResponse implements Ssdp.RemoteDevic
 
 	public static class Builder extends HttpResponse.Builder
 	{
-		private final HttpStatusLine STATUS_LINE = new HttpStatusLine(HttpMessage.VERSION_1_1, "200", "OK");
-
 		public Builder() {
-			super.setStartLine(STATUS_LINE);
+			this(HttpStatusLine.DEFAULT_200_OK);
+		}
+
+		public Builder(HttpStatusLine statusLine) {
+			super(statusLine);
 		}
 
 		public SsdpSearchResponse build() {
@@ -67,11 +65,11 @@ public class SsdpSearchResponse extends HttpResponse implements Ssdp.RemoteDevic
 		}
 
 		public void setSearchTarget(String target) {
-			mMap.putFirst(Ssdp.ST, target);
+			mMap.setFirst(Ssdp.ST, target);
 		}
 
 		public void setUniqueServiceName(String usn) {
-			mMap.putFirst(Ssdp.USN, usn);
+			mMap.setFirst(Ssdp.USN, usn);
 		}
 	
 		public void setBootId(int id) {

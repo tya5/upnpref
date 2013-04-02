@@ -11,8 +11,6 @@ import java.io.FileInputStream;
 import java.io.FilterInputStream;
 import java.io.FilterOutputStream;
 import java.io.ByteArrayOutputStream;
-import java.net.URI;
-import java.net.URL;
 import java.net.DatagramPacket;
 
 public class HttpMessage<L extends HttpStartLine>
@@ -69,24 +67,24 @@ public class HttpMessage<L extends HttpStartLine>
 		return true;
 	}
 
+	public int getCount(String key) {
+		return mMap.getCount(key);
+	}
+
+	public String get(String key, int index) {
+		return mMap.getAt(key, index);
+	}
+
 	public String getFirst(String name) {
 		return mMap.getFirst(name);
 	}
 
 	public int getInt(String name, int defaultValue) {
-		try {
-			return Integer.decode(getFirst(name));
-		} catch (Exception e) {
-			return defaultValue;
-		}
+		return mMap.getInt(name, defaultValue);
 	}
 
 	public long getLong(String name, long defaultValue) {
-		try {
-			return Long.decode(getFirst(name));
-		} catch (Exception e) {
-			return defaultValue;
-		}
+		return mMap.getLong(name, defaultValue);
 	}
 	
 	public boolean isKeepAlive() {
@@ -180,7 +178,7 @@ public class HttpMessage<L extends HttpStartLine>
 	 * @param out OutputStream for general message
 	 * @return OutputStream for entity body
 	 */
-	public static OutputStream writeMessageByChunked(OutputStream out, HttpMessage msg, final int maxChunkSize)
+	public static OutputStream writeMessageByChunked(OutputStream out, HttpMessage<?> msg, final int maxChunkSize)
 		throws IOException
 	{
 		writeMessageHeaders(out, msg, CHUNKED, null);
@@ -271,10 +269,10 @@ public class HttpMessage<L extends HttpStartLine>
 
 	public static class Builder<L extends HttpStartLine>
 	{
-		public L mStartLine;
+		public final L mStartLine;
 		public final HttpHeaders mMap = new HttpHeaders();
 
-		public void setStartLine(L startLine) {
+		public Builder(L startLine) {
 			mStartLine = startLine;
 		}
 
@@ -291,7 +289,7 @@ public class HttpMessage<L extends HttpStartLine>
 		}
 
 		public void putInt(String name, int value) {
-			mMap.putFirst(name, "" + value);
+			mMap.setFirst(name, "" + value);
 		}
 
 		public void remove(String name) {

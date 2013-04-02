@@ -22,9 +22,7 @@ public class Main
 
 			System.out.println("Client: connect and request to server");
 			Socket client = new Socket(local, 8080);
-			HttpRequest.Builder builder = new HttpRequest.Builder();
-			builder.setStartLine(REQUEST_GET);
-			builder.putHost(local.getHostAddress(), 8080);
+			HttpRequest.Builder builder = new HttpRequest.Builder(REQUEST_GET, local.getHostAddress(), 8080);
 			builder.build().send(client.getOutputStream(), "Hello Client!".getBytes());
 			builder = null;
 
@@ -44,8 +42,7 @@ public class Main
 
 						String data = "Hello Server!";
 						
-						HttpResponse.Builder builder = new HttpResponse.Builder();
-						builder.setStartLine(HttpStatusLine.DEFAULT_200_OK);
+						HttpResponse.Builder builder = new HttpResponse.Builder(HttpStatusLine.DEFAULT_200_OK);
 						builder.build().send(ctx.getClient().getOutputStream(), data.getBytes());
 						builder = null;
 

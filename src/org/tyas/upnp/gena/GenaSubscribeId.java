@@ -1,10 +1,10 @@
 package org.tyas.upnp.gena;
 
-public class SubscribeId
+public class GenaSubscribeId
 {
 	private final String mUuid;
 
-	public SubscribeId(String uuid) {
+	public GenaSubscribeId(String uuid) {
 		mUuid = uuid;
 	}
 
@@ -12,9 +12,9 @@ public class SubscribeId
 
 	@Override public String toString() { return "uuid:" + mUuid; }
 
-	public static SubscribeId getBySid(String sid) {
+	public static GenaSubscribeId getBySid(String sid) {
 		String pfx = "uuid:";
 		int idx = sid.indexOf(pfx);
-		return new SubscribeId(sid.substring(pfx.length()));
+		return new GenaSubscribeId(sid.substring(pfx.length()));
 	}
 }

@@ -133,7 +133,7 @@ public abstract class ActionMessage
 		writeDocument(array);
 		
 		new HttpRequest.Builder("POST", uri, HttpMessage.VERSION_1_1)
-			.putFirst(SOAPACTION, "\"" + getServiceType() + "#" + getActionName() + "\"")
+			.setFirst(SOAPACTION, "\"" + getServiceType() + "#" + getActionName() + "\"")
 			.send(out, array.toByteArray());
 	}
 
@@ -146,7 +146,7 @@ public abstract class ActionMessage
 		
 		new HttpRequest.Builder("POST", uri, HttpMessage.VERSION_1_1)
 			.setHost(sock.getInetAddress().getHostAddress(), sock.getPort())
-			.putFirst(SOAPACTION, "\"" + getServiceType() + "#" + getActionName() + "\"")
+			.setFirst(SOAPACTION, "\"" + getServiceType() + "#" + getActionName() + "\"")
 			.send(sock.getOutputStream(), array.toByteArray());
 	}
 

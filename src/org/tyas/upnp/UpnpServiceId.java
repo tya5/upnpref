@@ -4,8 +4,8 @@ public class UpnpServiceId
 {
 	public static final String UPNP_ORG = "upnp-org";
 		
-	private String mDomain;
-	private String mId;
+	private final String mDomain;
+	private final String mId;
 
 	public UpnpServiceId(String domain, String id) {
 		mDomain = domain;
@@ -39,7 +39,7 @@ public class UpnpServiceId
 		return false;
 	}
 
-	public static UpnpServiceId getByUrn(String urn) {
+	public static UpnpServiceId getByString(String urn) {
 		String [] ar = urn.split(":", 0);
 
 		if (ar.length != 4) return null;

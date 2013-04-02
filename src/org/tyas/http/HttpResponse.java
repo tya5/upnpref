@@ -6,7 +6,10 @@ import java.io.IOException;
 
 public class HttpResponse extends HttpMessage<HttpStatusLine>
 {
-	public static final String LOCATION = "LOCATION";
+	public static final HttpResponse DEFAULT_200_OK = new HttpResponse(HttpStatusLine.DEFAULT_200_OK, new HttpHeaders());
+
+	private static final String LOCATION = "LOCATION";
+	private static final String SERVER = "SERVER";
 
 	protected HttpResponse(HttpStatusLine startLine, HttpHeaders headers) {
 		super(startLine, headers);
@@ -30,7 +33,7 @@ public class HttpResponse extends HttpMessage<HttpStatusLine>
 		return HttpMessage.readMessage(in, HttpStatusLine.PARSER, factory);
 	}
 
-	public static final HttpMessage.Factory<HttpStatusLine,HttpResponse> FACTORY =
+	private static final HttpMessage.Factory<HttpStatusLine,HttpResponse> FACTORY =
 		new HttpMessage.Factory<HttpStatusLine,HttpResponse>()
 		{
 			public HttpResponse createMessage(HttpStatusLine startLine, HttpHeaders headers) {
@@ -40,12 +43,16 @@ public class HttpResponse extends HttpMessage<HttpStatusLine>
 
 	public static class Builder extends HttpMessage.Builder<HttpStatusLine>
 	{
+		public Builder(HttpStatusLine startLine) {
+			super(startLine);
+		}
+
 		public HttpResponse build() {
 			return build(FACTORY);
 		}
 
 		public void setLocation(String uri) {
-			mMap.putFirst(LOCATION, uri);
+			mMap.setFirst(LOCATION, uri);
 		}
 
 		public void setLocation(URI uri) {

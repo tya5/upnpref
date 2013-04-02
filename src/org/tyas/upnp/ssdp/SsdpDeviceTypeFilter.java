@@ -4,7 +4,7 @@ import org.tyas.upnp.UpnpDeviceType;
 
 public class SsdpDeviceTypeFilter extends SsdpFilter
 {
-	private UpnpDeviceType mType;
+	private final UpnpDeviceType mType;
 
 	public SsdpDeviceTypeFilter(Listener listener, UpnpDeviceType type) {
 		super(listener);
