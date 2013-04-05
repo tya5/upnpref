@@ -12,14 +12,14 @@ public class HttpRequest extends HttpMessage<HttpRequestLine>
 	}
 
 	public static HttpHeaders mergeHost(HttpHeaders headers, String host, int port) {
-		int col = host.indexOf(':');
+		int col = host.indexOf(":");
 		
 		if (port >= 0) {
 			if (col >= 0) {
 				host = host.substring(0, col);
 			}
 			
-			host += ':' + port;
+			host += ":" + port;
 		}
 		
 		headers.setFirst(HOST, host);

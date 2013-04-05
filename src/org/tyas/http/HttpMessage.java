@@ -149,15 +149,27 @@ public class HttpMessage<L extends HttpStartLine>
 	}
 
 	public void send(OutputStream out, byte [] entity) throws IOException {
-		writeMessage(out, this, entity);
+		send(out, null, entity);
+	}
+
+	public void send(OutputStream out, HttpHeaders overrideHeaders, byte [] entity) throws IOException {
+		writeMessage(out, this, overrideHeaders, entity);
 	}
 
 	public OutputStream sendByChunked(OutputStream out) throws IOException {
-		return writeMessageByChunked(out, this, 256);
+		return sendByChunked(out, (HttpHeaders)null);
+	}
+
+	public OutputStream sendByChunked(OutputStream out, HttpHeaders overrideHeaders) throws IOException {
+		return writeMessageByChunked(out, this, overrideHeaders, 256);
 	}
 
 	public void sendByChunked(OutputStream raw, InputStream in) throws IOException {
-		OutputStream out = writeMessageByChunked(raw, this, 256);
+		sendByChunked(raw, null, in);
+	}
+
+	public void sendByChunked(OutputStream raw, HttpHeaders overrideHeaders, InputStream in) throws IOException {
+		OutputStream out = writeMessageByChunked(raw, this, overrideHeaders, 256);
 		int b = in.read();
 		while (b >= 0) {
 			out.write(b);
@@ -166,8 +178,12 @@ public class HttpMessage<L extends HttpStartLine>
 	}
 
 	public void sendByChunked(OutputStream out, File f) throws IOException {
+		sendByChunked(out, null, f);
+	}
+
+	public void sendByChunked(OutputStream out, HttpHeaders overrideHeaders, File f) throws IOException {
 		FileInputStream in = new FileInputStream(f);
-		sendByChunked(out, in);
+		sendByChunked(out, overrideHeaders, in);
 		in.close();
 	}
 
@@ -178,10 +194,10 @@ public class HttpMessage<L extends HttpStartLine>
 	 * @param out OutputStream for general message
 	 * @return OutputStream for entity body
 	 */
-	public static OutputStream writeMessageByChunked(OutputStream out, HttpMessage<?> msg, final int maxChunkSize)
+	public static OutputStream writeMessageByChunked(OutputStream out, HttpMessage<?> msg, HttpHeaders overrideHeaders, final int maxChunkSize)
 		throws IOException
 	{
-		writeMessageHeaders(out, msg, CHUNKED, null);
+		writeMessageHeaders(out, msg, overrideHeaders, CHUNKED, null);
 		
 		return new FilterOutputStream(out) {
 			int ofs = 0;
@@ -199,36 +215,50 @@ public class HttpMessage<L extends HttpStartLine>
 		};
 	}
 
-	public static void writeMessage(OutputStream out, HttpMessage<?> msg, byte [] entity)
+	public static void writeMessage(OutputStream out, HttpMessage<?> msg, HttpHeaders overrideHeaders, byte [] entity)
 		throws IOException
 	{
 		String contLen = null;
 		if ((entity != null) && (entity.length > 0)) {
 			contLen = "" + entity.length;
 		}
-		writeMessageHeaders(out, msg, null, contLen);
+		writeMessageHeaders(out, msg, overrideHeaders, null, contLen);
 		if ((entity != null) && (entity.length > 0)) {
 			out.write(entity);
 		}
 	}
 
-	private static void writeMessageHeaders(OutputStream out, HttpMessage<?> msg, String transEnc, String contLen)
+	private static void writeMessageHeaders(OutputStream out, HttpMessage<?> msg, HttpHeaders overrideHeaders, String transEnc, String contLen)
 		throws IOException
 	{
 		out.write((msg.getStartLine().getLine() + "\r\n").getBytes());
-
+		
 		for (String key: msg.keySet()) {
-			if (TRANSFER_ENCODING.equals(key)) continue;
-			if (CONTENT_LENGTH.equals(key)) continue;
-			String values = join(msg.get(key), ",");
-			out.write((key + ":" + values + "\r\n").getBytes());
+			
+			if (TRANSFER_ENCODING.equals(key)) {
+				continue;
+			}
+			
+			if (CONTENT_LENGTH.equals(key)) {
+				continue;
+			}
+			
+			List<String> valueList = overrideHeaders != null ? overrideHeaders.get(key): null;
+			
+			if (valueList == null) {
+				valueList = msg.get(key);
+			}
+			
+			String values = join(valueList, ",");
+			
+			out.write((key + ": " + values + "\r\n").getBytes());
 		}
 
 		if (transEnc != null) {
-			out.write((TRANSFER_ENCODING + ":" + transEnc + CRLF).getBytes());
+			out.write((TRANSFER_ENCODING + ": " + transEnc + CRLF).getBytes());
 		}
 		if (contLen != null) {
-			out.write((CONTENT_LENGTH + ":" + contLen + CRLF).getBytes());
+			out.write((CONTENT_LENGTH + ": " + contLen + CRLF).getBytes());
 		}
 
 		out.write("\r\n".getBytes());

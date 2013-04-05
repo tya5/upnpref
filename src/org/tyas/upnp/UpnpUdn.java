@@ -27,7 +27,7 @@ public class UpnpUdn
 		return false;
 	}
 
-	public static UpnpUdn getByUuid(String udn) {
+	public static UpnpUdn getByString(String udn) {
 		String [] ar = udn.split(":", 0);
 
 		if (ar.length != 2) return null;

@@ -1,9 +1,7 @@
 package org.tyas.upnp.ssdp;
 
-import java.net.URL;
-import org.tyas.upnp.UpnpUsn;
 
-public interface Ssdp
+public interface SsdpConstant
 {
 	public static final String REQUEST_URI = "*";
 	public static final String NOTIFY = "NOTIFY";
@@ -22,20 +20,11 @@ public interface Ssdp
 	public static final String NEXTBOOTID = "NEXTBOOTID.UPNP.ORG";
 
 	public static final String MULTICAST_HOST = "239.255.255.250";
+	//public static final String MULTICAST_HOST = "239.255.255.249";
+	public static final int MULTICAST_PORT = 1900;
 	public static final int DEFAULT_PORT = 1900;
 
 	public static final String ST_ALL = "ssdp:all";
 	public static final String MAN_DISCOVER = "\"ssdp:discover\"";
 	public static final String ROOT_DEVICE = "upnp:rootdevice";
-
-	public interface RemoteDevicePointer
-	{
-		long getMaxAge();
-		URL getDescriptionUrl();
-		UpnpUsn getUniqueServiceName();
-		int getBootId();
-		int getConfigId();
-		int getSearchPort();
-		//String getServerName();
-	}
 }

@@ -8,17 +8,17 @@ import org.tyas.http.HttpRequestLine;
 import java.io.InputStream;
 import java.io.IOException;
 
-public class SsdpSearchRequest extends HttpRequest
+public class SsdpSearchRequest extends HttpRequest implements SsdpConstant
 {
 	private SsdpSearchRequest(HttpRequestLine startLine, HttpHeaders headers) {
 		super(startLine, headers);
 	}
 
-	public int getMaxWaitTime() { return getInt(Ssdp.MX, -1); }
+	public int getMaxWaitTime() { return getInt(MX, -1); }
 
-	public String getSearchTarget() { return getFirst(Ssdp.ST); }
+	public String getSearchTarget() { return getFirst(ST); }
 
-	public String getMan() { return getFirst(Ssdp.MAN); }
+	public String getMan() { return getFirst(MAN); }
 
 	public static SsdpSearchRequest read(InputStream in) throws IOException {
 		return HttpMessage.readMessage(in, HttpRequestLine.PARSER, FACTORY).getMessage();
@@ -28,7 +28,7 @@ public class SsdpSearchRequest extends HttpRequest
 		new HttpMessage.Factory<HttpRequestLine,SsdpSearchRequest>()
 	{
 		public SsdpSearchRequest createMessage(HttpRequestLine startLine, HttpHeaders headers) {
-			if (! Ssdp.M_SEARCH.equals(startLine.getMethod())) return null;
+			if (! M_SEARCH.equals(startLine.getMethod())) return null;
 
 			if (! HttpMessage.VERSION_1_1.equals(startLine.getHttpVersion())) return null;
 
@@ -38,18 +38,18 @@ public class SsdpSearchRequest extends HttpRequest
 
 	public static class Builder extends HttpRequest.Builder
 	{
-		private static final HttpRequestLine REQUEST_LINE = new HttpRequestLine(Ssdp.M_SEARCH, "*", HttpMessage.VERSION_1_1);
+		private static final HttpRequestLine REQUEST_LINE = new HttpRequestLine(M_SEARCH, "*", HttpMessage.VERSION_1_1);
 
 		public Builder(String host, int port) {
 			super(REQUEST_LINE, host, port);
 			
-			mMap.setFirst(Ssdp.MAN, Ssdp.MAN_DISCOVER);
-			setSearchTarget(Ssdp.ST_ALL);
+			mMap.setFirst(MAN, MAN_DISCOVER);
+			setSearchTarget(ST_ALL);
 			setMaxWaitTime(1800);
 		}
 
 		public Builder() {
-			this(Ssdp.MULTICAST_HOST, Ssdp.DEFAULT_PORT);
+			this(MULTICAST_HOST, DEFAULT_PORT);
 		}
 
 		public SsdpSearchRequest build() {
@@ -57,11 +57,11 @@ public class SsdpSearchRequest extends HttpRequest
 		}
 	
 		public void setMaxWaitTime(int seconds) {
-			putInt(Ssdp.MX, seconds);
+			putInt(MX, seconds);
 		}
 
 		public void setSearchTarget(String target) {
-			mMap.setFirst(Ssdp.ST, target);
+			mMap.setFirst(ST, target);
 		}
 	}
 }

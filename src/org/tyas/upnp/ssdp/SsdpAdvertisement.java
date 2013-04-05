@@ -12,38 +12,38 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 
-public class SsdpAdvertisement extends HttpRequest implements Ssdp.RemoteDevicePointer
+public class SsdpAdvertisement extends HttpRequest implements SsdpConstant
 {
 	public static enum Nts
 	{		
 		ALIVE("ssdp:alive", new String [] {
 				HttpRequest.HOST,
 				HttpMessage.CACHE_CONTROL,
-				Ssdp.LOCATION,
-				Ssdp.NT,
-				Ssdp.NTS,
+				LOCATION,
+				NT,
+				NTS,
 				HttpMessage.SERVER,
-				Ssdp.USN,
-				Ssdp.BOOTID,
-				Ssdp.CONFIGID,
+				USN,
+				BOOTID,
+				CONFIGID,
 			}),
 			BYEBYE("ssdp:byebye", new String [] {
 					HttpRequest.HOST,
-					Ssdp.NT,
-					Ssdp.NTS,
-					Ssdp.USN,
-					Ssdp.BOOTID,
-					Ssdp.CONFIGID,
+					NT,
+					NTS,
+					USN,
+					BOOTID,
+					CONFIGID,
 				}),
 			UPDATE("ssdp:update", new String [] {
 					HttpRequest.HOST,
-					Ssdp.LOCATION,
-					Ssdp.NT,
-					Ssdp.NTS,
-					Ssdp.USN,
-					Ssdp.BOOTID,
-					Ssdp.CONFIGID,
-					Ssdp.NEXTBOOTID,
+					LOCATION,
+					NT,
+					NTS,
+					USN,
+					BOOTID,
+					CONFIGID,
+					NEXTBOOTID,
 				});
 
 		private final String mStringValue;
@@ -82,21 +82,21 @@ public class SsdpAdvertisement extends HttpRequest implements Ssdp.RemoteDeviceP
 		super(startLine, headers);
 	}
 
-	public String getNotificationType() { return getFirst(Ssdp.NT); }
+	public String getNotificationType() { return getFirst(NT); }
 
-	public Nts getNotificationSubType() { return Nts.getByStringValue(getFirst(Ssdp.NTS)); }
+	public Nts getNotificationSubType() { return Nts.getByStringValue(getFirst(NTS)); }
 
-	public UpnpUsn getUniqueServiceName() { return UpnpUsn.getByString(getFirst(Ssdp.USN)); }
+	public UpnpUsn getUniqueServiceName() { return UpnpUsn.getByString(getFirst(USN)); }
 
-	public int getBootId() { return getInt(Ssdp.BOOTID, 0); }
+	public int getBootId() { return getInt(BOOTID, 0); }
 	
-	public int getConfigId() { return getInt(Ssdp.CONFIGID, 0); }
+	public int getConfigId() { return getInt(CONFIGID, 0); }
 	
-	public int getSearchPort() { return getInt(Ssdp.SEARCHPORT, -1); }
+	public int getSearchPort() { return getInt(SEARCHPORT, -1); }
 
 	public URL getDescriptionUrl() {
 		try {
-			return new URI(getFirst(Ssdp.LOCATION)).toURL();
+			return new URI(getFirst(LOCATION)).toURL();
 		} catch (Exception e) {
 			return null;
 		}
@@ -116,7 +116,7 @@ public class SsdpAdvertisement extends HttpRequest implements Ssdp.RemoteDeviceP
 	
 	public static class Builder extends HttpRequest.Builder
 	{
-		private static final HttpRequestLine REQUEST_LINE = new HttpRequestLine(Ssdp.NOTIFY, "*", HttpMessage.VERSION_1_1);
+		private static final HttpRequestLine REQUEST_LINE = new HttpRequestLine(NOTIFY, "*", HttpMessage.VERSION_1_1);
 
 		public Builder(String host, int port) {
 			super(REQUEST_LINE, "239.255.255.255", 1900);
@@ -124,23 +124,31 @@ public class SsdpAdvertisement extends HttpRequest implements Ssdp.RemoteDeviceP
 		}
 
 		public void setDescriptionUrl(String url) {
-			mMap.setFirst(Ssdp.LOCATION, url);
+			mMap.setFirst(LOCATION, url);
 		}
 
 		public void setBootId(int id) {
-			putInt(Ssdp.BOOTID, id);
+			putInt(BOOTID, id);
 		}
 
 		public void setConfigId(int id) {
-			putInt(Ssdp.CONFIGID, id);
+			putInt(CONFIGID, id);
 		}
 
 		public void setSearchPort(int port) {
-			putInt(Ssdp.SEARCHPORT, port);
+			putInt(SEARCHPORT, port);
 		}
 
+		public void setNotificationType(String value) {
+			mMap.setFirst(NT, value);
+		}
+
+		public void setUsn(String usn) {
+			mMap.setFirst(USN, usn);
+		}
+		
 		public void setNotificationSubType(Nts nts) {
-			mMap.setFirst(Ssdp.NTS, nts.getStringValue());
+			mMap.setFirst(NTS, nts.getStringValue());
 		}
 
 		public SsdpAdvertisement build() {
@@ -148,7 +156,7 @@ public class SsdpAdvertisement extends HttpRequest implements Ssdp.RemoteDeviceP
 		}
 
 		public SsdpAdvertisement buildStrict() {
-			Nts nts = Nts.getByStringValue(mMap.getFirst(Ssdp.NTS));
+			Nts nts = Nts.getByStringValue(mMap.getFirst(NTS));
 
 			if ((nts == null) || (! nts.containsAllRequired(mMap))) {
 				return null;

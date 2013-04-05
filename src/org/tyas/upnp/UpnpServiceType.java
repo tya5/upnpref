@@ -45,7 +45,7 @@ public class UpnpServiceType
 		return false;
 	}
 
-	public static UpnpServiceType getByUrn(String urn) {
+	public static UpnpServiceType getByString(String urn) {
 		String [] ar = urn.split(":", 0);
 
 		if (ar.length != 5) return null;
@@ -60,7 +60,7 @@ public class UpnpServiceType
 	public static UpnpServiceType getByUsn(String usn) {
 		String [] ar = usn.split("::", 0);
 
-		if (ar.length > 1) return getByUrn(ar[1]);
+		if (ar.length > 1) return getByString(ar[1]);
 
 		return null;
 	}

@@ -10,7 +10,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 
-public class SsdpSearchResponse extends HttpResponse implements Ssdp.RemoteDevicePointer
+public class SsdpSearchResponse extends HttpResponse
+	implements SsdpConstant
 {
 	private SsdpSearchResponse(HttpStatusLine startLine, HttpHeaders headers) {
 		super(startLine, headers);
@@ -24,15 +25,15 @@ public class SsdpSearchResponse extends HttpResponse implements Ssdp.RemoteDevic
 		}
 	}
 
-	public String getSearchTarget() { return getFirst(Ssdp.ST); }
+	public String getSearchTarget() { return getFirst(ST); }
 
-	public UpnpUsn getUniqueServiceName() { return UpnpUsn.getByString(getFirst(Ssdp.USN)); }
+	public UpnpUsn getUniqueServiceName() { return UpnpUsn.getByString(getFirst(USN)); }
 
-	public int getBootId() { return getInt(Ssdp.BOOTID, 0); }
+	public int getBootId() { return getInt(BOOTID, 0); }
 
-	public int getConfigId() { return getInt(Ssdp.CONFIGID, 0); }
+	public int getConfigId() { return getInt(CONFIGID, 0); }
 
-	public int getSearchPort() { return getInt(Ssdp.SEARCHPORT, -1); }
+	public int getSearchPort() { return getInt(SEARCHPORT, -1); }
 
 	public static SsdpSearchResponse read(InputStream in) throws IOException {
 		return HttpMessage.readMessage(in, HttpStatusLine.PARSER, FACTORY).getMessage();
@@ -50,6 +51,7 @@ public class SsdpSearchResponse extends HttpResponse implements Ssdp.RemoteDevic
 	{
 		public Builder() {
 			this(HttpStatusLine.DEFAULT_200_OK);
+			putMaxAge(1800);
 		}
 
 		public Builder(HttpStatusLine statusLine) {
@@ -65,23 +67,23 @@ public class SsdpSearchResponse extends HttpResponse implements Ssdp.RemoteDevic
 		}
 
 		public void setSearchTarget(String target) {
-			mMap.setFirst(Ssdp.ST, target);
+			mMap.setFirst(ST, target);
 		}
 
 		public void setUniqueServiceName(String usn) {
-			mMap.setFirst(Ssdp.USN, usn);
+			mMap.setFirst(USN, usn);
 		}
 	
 		public void setBootId(int id) {
-			putInt(Ssdp.BOOTID, id);
+			putInt(BOOTID, id);
 		}
 
 		public void setConfigId(int id) {
-			putInt(Ssdp.CONFIGID, id);
+			putInt(CONFIGID, id);
 		}
 
 		public void setSearchPort(int port) {
-			putInt(Ssdp.SEARCHPORT, port);
+			putInt(SEARCHPORT, port);
 		}
 	}
 }

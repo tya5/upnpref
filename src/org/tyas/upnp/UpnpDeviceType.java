@@ -46,7 +46,7 @@ public class UpnpDeviceType
 		return false;
 	}
 
-	public static UpnpDeviceType getByUrn(String urn) {
+	public static UpnpDeviceType getByString(String urn) {
 		String [] ar = urn.split(":", 0);
 
 		if (ar.length != 5) return null;
@@ -61,7 +61,7 @@ public class UpnpDeviceType
 	public static UpnpDeviceType getByUsn(String usn) {
 		String [] ar = usn.split("::", 0);
 
-		if (ar.length > 1) return getByUrn(ar[1]);
+		if (ar.length > 1) return getByString(ar[1]);
 
 		return null;
 	}

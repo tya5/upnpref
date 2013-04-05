@@ -2,15 +2,15 @@ package org.tyas.upnp;
 
 public class UpnpUsn
 {
-	private final String mPrefix;
+	private final UpnpUdn mPrefix;
 	private final String mSuffix;
 
-	public UpnpUsn(String pfx, String sfx) {
+	public UpnpUsn(UpnpUdn pfx, String sfx) {
 		mPrefix = pfx;
 		mSuffix = sfx;
 	}
 
-	public String getPrefix() {
+	public UpnpUdn getPrefix() {
 		return mPrefix;
 	}
 
@@ -19,13 +19,13 @@ public class UpnpUsn
 	}
 
 	public UpnpUdn getUdn() {
-		return UpnpUdn.getByUuid(mPrefix);
+		return mPrefix;
 	}
 
 	@Override public String toString() {
 		if (mPrefix == null) return "";
 
-		if (mSuffix == null) return mPrefix;
+		if (mSuffix == null) return mPrefix.toString();
 
 		return mPrefix + "::" + mSuffix;
 	}
@@ -43,7 +43,8 @@ public class UpnpUsn
 
 	public static UpnpUsn getByString(String usn) {
 		String [] ar = usn.split("::");
+		UpnpUdn udn = UpnpUdn.getByString(ar.length > 0 ? ar[0]:null);
 
-		return new UpnpUsn(ar.length > 0 ? ar[0]:null, ar.length > 1 ? ar[1]:null);
+		return new UpnpUsn(udn, ar.length > 1 ? ar[1]:null);
 	}
 }
