@@ -70,6 +70,10 @@ public class SsdpController implements SsdpConstant
 		mLocalAddress = localAddress;
 	}
 
+	public InetAddress getLocalAddress() {
+		return mLocalAddress;
+	}
+
 	public void addOnRemoteServiceChangeListener(OnRemoteServiceChangeListener l) {
 		synchronized (mListeners) {
 			mListeners.add( l );
