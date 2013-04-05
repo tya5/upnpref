@@ -57,7 +57,8 @@ public class SsdpSearchServer implements SsdpConstant
 		try {
 			msock = new MulticastSocket( null );
 			msock.setReuseAddress( true );
-			msock.bind(new InetSocketAddress(localAddress, MULTICAST_PORT));
+			msock.setNetworkInterface(NetworkInterface.getByInetAddress(localAddress));
+			msock.bind(new InetSocketAddress( MULTICAST_PORT ));
 			msock.joinGroup(InetAddress.getByName( MULTICAST_HOST ));
 			
 			usock = new DatagramSocket( null );

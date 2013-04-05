@@ -54,7 +54,8 @@ public class SsdpAdvertiseSubscriber implements SsdpConstant
 		try {
 			sock = new MulticastSocket( null );
 			sock.setReuseAddress( true );
-			sock.bind(new InetSocketAddress(localAddress, MULTICAST_PORT));
+			sock.setNetworkInterface(NetworkInterface.getByInetAddress(localAddress));
+			sock.bind(new InetSocketAddress( MULTICAST_PORT ));
 			sock.joinGroup(InetAddress.getByName( MULTICAST_HOST ));
 			
 		} catch (Exception e) {
