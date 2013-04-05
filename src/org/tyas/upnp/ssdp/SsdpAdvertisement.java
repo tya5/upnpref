@@ -110,6 +110,10 @@ public class SsdpAdvertisement extends HttpRequest implements SsdpConstant
 		new HttpMessage.Factory<HttpRequestLine,SsdpAdvertisement>()
 	{
 		public SsdpAdvertisement createMessage(HttpRequestLine startLine, HttpHeaders headers) {
+			if (! NOTIFY.equals(startLine.getMethod())) return null;
+
+			if (! HttpMessage.VERSION_1_1.equals(startLine.getHttpVersion())) return null;
+
 			return new SsdpAdvertisement(startLine, headers);
 		}
 	};

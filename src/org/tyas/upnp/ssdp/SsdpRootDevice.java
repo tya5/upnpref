@@ -30,7 +30,7 @@ public class SsdpRootDevice implements SsdpConstant
 			}
 
 			public int getUnicastSearchPort() {
-				return (mSearchServer != null) ? mSearchServer.getUnicastSearchPort(): -1;
+				return SsdpRootDevice.this.getUnicastSearchPort();
 			}
 		};
 
@@ -43,6 +43,14 @@ public class SsdpRootDevice implements SsdpConstant
 		mDescriptionUrl = descriptionPath;
 
 		addDevice(rootDevice, type);
+	}
+
+	public InetAddress getAddress() {
+		return mLocalAddress;
+	}
+
+	public int getUnicastSearchPort() {
+		return (mSearchServer != null) ? mSearchServer.getUnicastSearchPort(): -1;
 	}
 
 	public boolean isListening() {
@@ -60,19 +68,23 @@ public class SsdpRootDevice implements SsdpConstant
 				mSearchServer.addOnSearchRequestListener(mOnSearchRequest);
 			}
 		}
-
+		
 		if (mAdvertiser == null) {
 			mAdvertiser = SsdpAdvertisePublisher.newInstance(mLocalAddress);
 		}
+		
+		notifyAll(SsdpAdvertisement.Nts.ALIVE);
 	}
 
 	public void stopListening() {
+		notifyAll(SsdpAdvertisement.Nts.BYEBYE);
+		
 		if (mSearchServer != null) {
 			mSearchServer.close();
 			mSearchServer.removeOnSearchRequestListener(mOnSearchRequest);
 			mSearchServer = null;
 		}
-
+		
 		if (mAdvertiser != null) {
 			mAdvertiser.close();
 			mAdvertiser = null;
@@ -105,10 +117,6 @@ public class SsdpRootDevice implements SsdpConstant
 
 	public UpnpUdn getUdn() {
 		return mRootDeviceUdn;
-	}
-
-	public String getDescriptionLocation() {
-		return mDescriptionUrl;
 	}
 
 	public synchronized void addDevice(UpnpUdn device, UpnpDeviceType type) {
@@ -168,16 +176,16 @@ public class SsdpRootDevice implements SsdpConstant
 	private synchronized void notifyAll(SsdpAdvertisement.Nts nts) {
 		notifyRootDevice(nts);
 
+		for (UpnpUdn udn: getUdnSet()) {
+			notifyDevice(udn, nts);
+		}
+
 		for (UpnpDeviceType devType: getDeviceTypeSet()) {
 			notifyDeviceType(devType, nts);
 		}
 
 		for (UpnpServiceType srvType: getServiceTypeSet()) {
 			notifyServiceType(srvType, nts);
-		}
-
-		for (UpnpUdn udn: getUdnSet()) {
-			notifyDevice(udn, nts);
 		}
 	}
 
@@ -223,104 +231,149 @@ public class SsdpRootDevice implements SsdpConstant
 		mAdvertiser.notify(mSpec, usn, nt, nts);
 	}
 
-	private synchronized void responseAll(SsdpSearchRequest req, InetAddress host, int port) {
-		responseRootDevice(req, host, port);
+	private synchronized void responseAll(SsdpSearchRequest req, InetAddress host, int port, boolean delayByMx) {
+		responseRootDevice(req, host, port, delayByMx);
+
+		for (UpnpUdn udn: getUdnSet()) {
+			responseDevice(req, udn, host, port, delayByMx);
+		}
 
 		for (UpnpDeviceType devType: getDeviceTypeSet()) {
-			responseDeviceType(req, devType, host, port);
+			responseDeviceType(req, devType, host, port, delayByMx);
 		}
 
 		for (UpnpServiceType srvType: getServiceTypeSet()) {
-			responseServiceType(req, srvType, host, port);
-		}
-
-		for (UpnpUdn udn: getUdnSet()) {
-			responseDevice(req, udn, host, port);
+			responseServiceType(req, srvType, host, port, delayByMx);
 		}
 	}
 
-	private void responseRootDevice(SsdpSearchRequest req, InetAddress host, int port) {
-		response(req, new UpnpUsn(getUdn(), ROOT_DEVICE), host, port);
+	private void responseRootDevice(SsdpSearchRequest req, InetAddress host, int port, boolean delayByMx) {
+		response(req, new UpnpUsn(getUdn(), ROOT_DEVICE), host, port, delayByMx);
 	}
 
-	private void responseDevice(SsdpSearchRequest req, UpnpUdn udn, InetAddress host, int port) {
-		response(req, new UpnpUsn(udn, null), host, port);
+	private void responseDevice(SsdpSearchRequest req, UpnpUdn udn, InetAddress host, int port, boolean delayByMx) {
+		response(req, new UpnpUsn(udn, null), host, port, delayByMx);
 	}
 
-	private synchronized void responseDeviceType(SsdpSearchRequest req, UpnpDeviceType type, InetAddress host, int port) {
+	private synchronized void responseDeviceType(SsdpSearchRequest req, UpnpDeviceType type, InetAddress host, int port, boolean delayByMx) {
 		String suffix = type.toString();
 		Set<UpnpUdn> set = getUdnSet(type);
 		
 		if (set != null) {
 			for (UpnpUdn udn: set) {
-				response(req, new UpnpUsn(udn, suffix), host, port);
+				response(req, new UpnpUsn(udn, suffix), host, port, delayByMx);
 			}
 		}
 	}
 
-	private synchronized void responseServiceType(SsdpSearchRequest req, UpnpServiceType type, InetAddress host, int port) {
+	private synchronized void responseServiceType(SsdpSearchRequest req, UpnpServiceType type, InetAddress host, int port, boolean delayByMx) {
 		String suffix = type.toString();
 		Set<UpnpUdn> set = getUdnSet(type);
 		
 		if (set != null) {
 			for (UpnpUdn udn: set) {
-				response(req, new UpnpUsn(udn, suffix), host, port);
+				response(req, new UpnpUsn(udn, suffix), host, port, delayByMx);
 			}
 		}
 	}
 
-	private void response(final SsdpSearchRequest req, final UpnpUsn usn, final InetAddress host, final int port) {
+	private void response(final SsdpSearchRequest req, final UpnpUsn usn, final InetAddress host, final int port, boolean delayByMx) {
+		
+		if (! delayByMx) {
+			doResponse(req.getSearchTarget(), usn, host, port);
+			return;
+		}
+
 		long delay = ((long) req.getMaxWaitTime()) * mRandom.nextInt(1000);
 		
 		mTimer.schedule(new TimerTask() {
 				public void run() {
-					
-					if (isListening()) {
-						return;
-					}
-					
-					if (mSearchServer == null) {
-						return;
-					}
-					
-					mSearchServer.response(host, port, mSpec, req.getSearchTarget(), usn);
+					doResponse(req.getSearchTarget(), usn, host, port);
 				}
 			}, delay);
+	}
+
+	private void doResponse(String searchTarget, UpnpUsn usn, InetAddress host, int port) {
+		if (! isListening()) {
+			return;
+		}
+					
+		if (mSearchServer == null) {
+			return;
+		}
+					
+		mSearchServer.response(host, port, mSpec, searchTarget, usn);
 	}
 
 	private final SsdpSearchServer.OnSearchRequestListener mOnSearchRequest =
 		new SsdpSearchServer.OnSearchRequestListener()
 		{
-			public void onSearchRequest(SsdpSearchServer server, SsdpSearchRequest req, InetAddress host, int port) {
+			public void onSearchRequest(SsdpSearchServer server, SsdpSearchRequest req, InetAddress host, int port, boolean isMulticast) {
 				String st = req.getSearchTarget();
 				
 				if (ST_ALL.equals( st )) {
-					responseAll(req, host, port);
+					responseAll(req, host, port, isMulticast);
 					return;
 				}
 				
 				if (ROOT_DEVICE.equals( st )) {
-					responseRootDevice(req, host, port);
+					responseRootDevice(req, host, port, isMulticast);
 					return;
 				}
 				
 				UpnpDeviceType dev = UpnpDeviceType.getByString( st );
 				if (dev != null) {
-					responseDeviceType(req, dev, host, port);
+					responseDeviceType(req, dev, host, port, isMulticast);
 					return;
 				}
 				
 				UpnpServiceType srv =  UpnpServiceType.getByString( st );
 				if (srv != null) {
-					responseServiceType(req, srv, host, port);
+					responseServiceType(req, srv, host, port, isMulticast);
 					return;
 				}
 				
 				UpnpUdn udn = UpnpUdn.getByString( st );
 				if (udn != null) {
-					responseDevice(req, udn, host, port);
+					responseDevice(req, udn, host, port, isMulticast);
 					return;
 				}
 			}
 		};
+
+	public static void main(String [] args) {
+		try {
+			UpnpUdn udn = new UpnpUdn("6eb518e5-f8b9-4318-bf49-3483b0d8c716");
+			UpnpDeviceType type = new UpnpDeviceType("org.tyas", "Foo", "1");
+			SsdpRootDevice rootDev = new SsdpRootDevice(InetAddress.getLocalHost(), udn, type, "");
+			
+			SsdpController ssdp = new SsdpController(InetAddress.getLocalHost());
+
+			ssdp.addOnRemoteServiceChangeListener(new SsdpController.OnRemoteServiceChangeListener() {
+					public void onServiceFound(SsdpController controller, SsdpController.RemoteService service) {
+						System.out.println("*** found   "+service.getRemoteAddress()+" "+service.getUsn());
+					}
+					public void onServiceByeBye(SsdpController controller, SsdpController.RemoteService service, UpnpUsn usn) {
+						System.out.println("*** byebye  "+(service != null ? service.getRemoteAddress():"none")+" "+usn);
+					}
+					public void onServiceExpired(SsdpController controller, SsdpController.RemoteService service, UpnpUsn usn) {
+						System.out.println("*** expired "+(service != null ? service.getRemoteAddress():"none")+" "+usn);
+					}
+					public void onServiceUpdated(SsdpController controller, SsdpController.RemoteService beforeUpdated, SsdpController.RemoteService afterUpdated) {
+						SsdpController.RemoteService service = afterUpdated;
+						//System.out.println("updated "+service.getRemoteAddress()+" "+service.getUsn());
+					}
+				});
+			
+			rootDev.startListening();
+			
+			ssdp.startListening();
+			
+			//ssdp.searchAllByUnicast(rootDev.getAddress().getHostAddress(), rootDev.getUnicastSearchPort());
+			ssdp.searchAllByMulticast(3);
+			
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 }

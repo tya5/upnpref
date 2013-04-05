@@ -161,6 +161,9 @@ public class SsdpSearchClient implements SsdpConstant
 		
 			pkt.setAddress(InetAddress.getByName(reqBuilder.getHost()));
 			pkt.setPort(reqBuilder.getPort());
+
+			//System.out.println("SearchClient send");
+			//System.out.println(new String(pkt.getData(), pkt.getOffset(), pkt.getLength()));
 		
 			mMSearchTx.send( pkt );
 		} catch (Exception e) {

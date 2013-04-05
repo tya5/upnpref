@@ -20,9 +20,8 @@ public interface SsdpConstant
 	public static final String NEXTBOOTID = "NEXTBOOTID.UPNP.ORG";
 
 	public static final String MULTICAST_HOST = "239.255.255.250";
-	//public static final String MULTICAST_HOST = "239.255.255.249";
 	public static final int MULTICAST_PORT = 1900;
-	public static final int DEFAULT_PORT = 1900;
+	public static final int DEFAULT_PORT = MULTICAST_PORT;
 
 	public static final String ST_ALL = "ssdp:all";
 	public static final String MAN_DISCOVER = "\"ssdp:discover\"";

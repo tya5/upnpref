@@ -1,15 +1,7 @@
 package org.tyas.upnp.ssdp;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.net.URL;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-
+import java.util.*;
+import java.net.*;
 import org.tyas.upnp.*;
 
 public class SsdpController implements SsdpConstant
@@ -314,8 +306,7 @@ public class SsdpController implements SsdpConstant
 			
 			ssdp.startListening();
 			
-			ssdp.searchRootDeviceByMulticast(5);
-			ssdp.searchDeviceTypeByMulticast(new UpnpDeviceType("MediaServer", "1"), 5);
+			ssdp.searchDeviceTypeByMulticast(new UpnpDeviceType("org.tyas", "Foo", "1"), 5);
 			
 		} catch (Exception e) {
 			e.printStackTrace();

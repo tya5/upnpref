@@ -10,7 +10,7 @@ public class SsdpSearchServer implements SsdpConstant
 {
 	public interface OnSearchRequestListener
 	{
-		public void onSearchRequest(SsdpSearchServer server, SsdpSearchRequest req, InetAddress remoteHost, int remotePort);
+		public void onSearchRequest(SsdpSearchServer server, SsdpSearchRequest req, InetAddress remoteHost, int remotePort, boolean isMulticast);
 	}
 
 	private final MulticastSocket mMSearchRx;
@@ -113,7 +113,7 @@ public class SsdpSearchServer implements SsdpConstant
 		}
 	}
 
-	public void performOnSearchRequest(SsdpSearchRequest req, InetAddress host, int port) {
+	public void performOnSearchRequest(SsdpSearchRequest req, InetAddress host, int port, boolean isMulticast) {
 		OnSearchRequestListener [] listeners;
 
 		synchronized (mOnSearchRequestListeners) {
@@ -127,7 +127,7 @@ public class SsdpSearchServer implements SsdpConstant
 			}
 
 			try {
-				l.onSearchRequest(this, req, host, port);
+				l.onSearchRequest(this, req, host, port, isMulticast);
 			} catch (Throwable e) {
 				e.printStackTrace();
 			}
@@ -156,6 +156,9 @@ public class SsdpSearchServer implements SsdpConstant
 			pkt.setAddress(host);
 			pkt.setPort(port);
 			
+			//System.out.println("SearchServer send");
+			//System.out.println(new String(pkt.getData(), pkt.getOffset(), pkt.getLength()));
+			
 			mUSearchTx.send( pkt );
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -171,7 +174,11 @@ public class SsdpSearchServer implements SsdpConstant
 			this.sock = sock;
 		}
 
+		protected void onStart() {
+		}
+
 		public void run() {
+			onStart();
 			
 			byte [] buf = new byte[ 2048 ];
 			DatagramPacket pkt = new DatagramPacket(buf, buf.length);
@@ -180,19 +187,27 @@ public class SsdpSearchServer implements SsdpConstant
 				try {
 					sock.receive( pkt );
 					
+					//System.out.println("SearchServer recv");
+					//System.out.println(new String(pkt.getData(), pkt.getOffset(), pkt.getLength()));
+					
 					InputStream in = new ByteArrayInputStream( pkt.getData() );
 					SsdpSearchRequest req = SsdpSearchRequest.read( in );
-					
+
 					if (req == null) {
 						continue;
 					}
 					
-					performOnSearchRequest(req, pkt.getAddress(), pkt.getPort());
+					performOnSearchRequest(req, pkt.getAddress(), pkt.getPort(), (sock instanceof MulticastSocket));
 					
 				} catch (Throwable e) {
 					e.printStackTrace();
 				}
 			}
+			
+			onStop();
+		}
+		
+		protected void onStop() {
 		}
 	}
 }
