@@ -98,27 +98,27 @@ public class SsdpController implements SsdpConstant
 		searchByUnicast(ROOT_DEVICE, host, port);
 	}
 
-	public void searchDeviceByMulticast(UpnpUdn device, int maxWaitTimeSeconds) {
+	public void searchByMulticast(UpnpUdn device, int maxWaitTimeSeconds) {
 		searchByMulticast(device.toString(), maxWaitTimeSeconds);
 	}
 
-	public void searchDeviceByUnicast(UpnpUdn device, String host, int port) {
+	public void searchByUnicast(UpnpUdn device, String host, int port) {
 		searchByUnicast(device.toString(), host, port);
 	}
 
-	public void searchDeviceTypeByMulticast(UpnpDeviceType type, int maxWaitTimeSeconds) {
+	public void searchByMulticast(UpnpDeviceType type, int maxWaitTimeSeconds) {
 		searchByMulticast(type.toString(), maxWaitTimeSeconds);
 	}
 
-	public void searchDeviceTypeByUnicast(UpnpDeviceType type, String host, int port) {
+	public void searchByUnicast(UpnpDeviceType type, String host, int port) {
 		searchByUnicast(type.toString(), host, port);
 	}
 
-	public void searchServiceTypeByMulticast(UpnpServiceType type, int maxWaitTimeSeconds) {
+	public void searchByMulticast(UpnpServiceType type, int maxWaitTimeSeconds) {
 		searchByMulticast(type.toString(), maxWaitTimeSeconds);
 	}
 
-	public void searchServiceTypeByUnicast(UpnpServiceType type, String host, int port) {
+	public void searchByUnicast(UpnpServiceType type, String host, int port) {
 		searchByUnicast(type.toString(), host, port);
 	}
 
@@ -306,7 +306,7 @@ public class SsdpController implements SsdpConstant
 			
 			ssdp.startListening();
 			
-			ssdp.searchDeviceTypeByMulticast(new UpnpDeviceType("org.tyas", "Foo", "1"), 5);
+			ssdp.searchByMulticast(new UpnpDeviceType("org.tyas", "Foo", "1"), 5);
 			
 		} catch (Exception e) {
 			e.printStackTrace();

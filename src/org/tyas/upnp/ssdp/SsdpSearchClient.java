@@ -126,27 +126,27 @@ public class SsdpSearchClient implements SsdpConstant
 		searchByUnicast(ROOT_DEVICE, host, port);
 	}
 
-	public void searchDeviceByMulticast(UpnpUdn device, int maxWaitTimeSeconds) {
+	public void searchByMulticast(UpnpUdn device, int maxWaitTimeSeconds) {
 		searchByMulticast(device.toString(), maxWaitTimeSeconds);
 	}
 
-	public void searchDeviceByUnicast(UpnpUdn device, String host, int port) {
+	public void searchByUnicast(UpnpUdn device, String host, int port) {
 		searchByUnicast(device.toString(), host, port);
 	}
 
-	public void searchDeviceTypeByMulticast(UpnpDeviceType type, int maxWaitTimeSeconds) {
+	public void searchByMulticast(UpnpDeviceType type, int maxWaitTimeSeconds) {
 		searchByMulticast(type.toString(), maxWaitTimeSeconds);
 	}
 
-	public void searchDeviceTypeByUnicast(UpnpDeviceType type, String host, int port) {
+	public void searchByUnicast(UpnpDeviceType type, String host, int port) {
 		searchByUnicast(type.toString(), host, port);
 	}
 
-	public void searchServiceTypeByMulticast(UpnpServiceType type, int maxWaitTimeSeconds) {
+	public void searchByMulticast(UpnpServiceType type, int maxWaitTimeSeconds) {
 		searchByMulticast(type.toString(), maxWaitTimeSeconds);
 	}
 
-	public void searchServiceTypeByUnicast(UpnpServiceType type, String host, int port) {
+	public void searchByUnicast(UpnpServiceType type, String host, int port) {
 		searchByUnicast(type.toString(), host, port);
 	}
 
@@ -282,17 +282,18 @@ public class SsdpSearchClient implements SsdpConstant
 			//SsdpRootDevice rootDev = new SsdpRootDevice(device, type, "");
 			SsdpSearchServer server = SsdpSearchServer.newInstance(InetAddress.getLocalHost());
 			SsdpSearchClient client = SsdpSearchClient.newInstance(InetAddress.getLocalHost());
-
+			
 			client.addOnSearchResponseListener(new OnSearchResponseListener() {
 					public void onSearchResponse(SsdpSearchClient c, SsdpSearchResponse resp, InetAddress remoteHost) {
 						System.out.println("SearchResponse from "+remoteHost);
 					}
 				});
-		
-			client.searchDeviceByMulticast(device, 5);
-		
+			
+			client.searchRootDeviceByMulticast(5);
+			client.searchByMulticast(device, 5);
+			
 			Thread.sleep(10000);
-		
+			
 			client.close();
 			server.close();
 		} catch (Exception e) {
