@@ -184,6 +184,18 @@ public class SsdpController implements SsdpConstant
 
 	private final Map<UpnpUsn,RemoteService> mMap = new HashMap<UpnpUsn,RemoteService>();
 
+	public synchronized void clearRemoteServices() {
+		for (UpnpUsn usn: mMap.keySet()) {
+			RemoteService s = mMap.get(usn);
+			
+			if (s != null) {
+				s.expireTask.cancel();
+			}
+		}
+		
+		mMap.clear();
+	}
+
 	private synchronized void addRemoteService(RemoteService service) {
 		RemoteService before = mMap.get(service.getUsn());
 		
@@ -207,6 +219,10 @@ public class SsdpController implements SsdpConstant
 		
 		mMap.remove( usn );
 		
+		if (before != null) {
+			before.expireTask.cancel();
+		}
+		
 		performOnByeBye( before, usn );
 	}
 
@@ -214,6 +230,10 @@ public class SsdpController implements SsdpConstant
 		RemoteService before = mMap.get( usn );
 		
 		mMap.remove( usn );
+		
+		if (before != null) {
+			before.expireTask.cancel();
+		}
 		
 		performOnExpired( before, usn );
 	}
